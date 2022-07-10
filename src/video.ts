@@ -30,7 +30,7 @@ class ScrapedVideoData {
 
     return new ScrapedVideoData(
       url,
-      '',
+      rawLikeCount,
       title,
       '',
       '',

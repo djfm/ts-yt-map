@@ -15,6 +15,7 @@ describe('Basic browser tests', () => {
 
     const video = await ScrapedVideoData.scrape(page, 'https://www.youtube.com/watch?v=a1zevmYu1v4');
     expect(video.title).toBe('Drone over Quiet Lake in the Morning');
+    expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
 
     browser.close();
   });

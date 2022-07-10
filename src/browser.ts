@@ -12,6 +12,10 @@ class Browser {
   static async launch(): Promise<Browser> {
     const puppeteerBrowser = await puppeteer.launch({
       headless: true,
+      defaultViewport: {
+        width: 1980 + Math.round(Math.random() * 100),
+        height: 1080 * 2 + Math.round((Math.random() * 500)),
+      },
     });
 
     return new Browser(puppeteerBrowser);
@@ -25,6 +29,7 @@ class Browser {
     const page = await this.browser.newPage();
     page.setDefaultNavigationTimeout(60000);
     page.setDefaultTimeout(30000);
+
     return page;
   }
 }
