@@ -4,5 +4,5 @@
     "strict": true,
     "noEmit": true,
   },
-  "exclude": []
+  "exclude": ["**/*.js, node_modules"]
 }
