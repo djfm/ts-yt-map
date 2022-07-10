@@ -27,6 +27,9 @@
         "js": "always"
       }
     ],
-    "no-useless-constructor": "off"
+    "no-useless-constructor": "off",
+    "implicit-arrow-linebreak": "off",
+    "function-paren-newline": "off",
+    "object-curly-newline": "off"
   }
 }

@@ -1,8 +1,13 @@
 import { Page } from 'puppeteer';
+import { log } from './lib';
 
 import {
   acceptCookiesIfAny,
+  getElementsAttribute,
+  getAttribute,
   getInnerText,
+  navigateTo,
+  takeScreenshot,
 } from './page_util';
 
 class ScrapedVideoData {
@@ -12,12 +17,23 @@ class ScrapedVideoData {
     public title: string,
     public description: string,
     public rawPublishedOn: string,
-    public channelUrl: string,
+    public channelURL: string,
     public recommendationURLs: string[],
   ) {}
 
   public static async scrape(page: Page, url: string): Promise<ScrapedVideoData> {
-    await page.goto(url);
+    log.info(`Scraping video URL: ${url}`);
+
+    try {
+      return await ScrapedVideoData.try_scrape(page, url);
+    } catch (e) {
+      await takeScreenshot(page, 'video_scrape_failure');
+      throw e;
+    }
+  }
+
+  static async try_scrape(page: Page, url: string): Promise<ScrapedVideoData> {
+    await navigateTo(page, url);
     await acceptCookiesIfAny(page);
 
     const titleSelector = '#primary-inner h1.title yt-formatted-string';
@@ -27,15 +43,36 @@ class ScrapedVideoData {
     const rawLikeCount = await getInnerText(page, likeCountSelector);
 
     const descriptionMoreButtonSelector = 'ytd-video-secondary-info-renderer .more-button';
+    try {
+      const moreButton = await page.$(descriptionMoreButtonSelector);
+      if (moreButton !== null) {
+        await moreButton.click();
+      }
+    } catch (e) {
+      // ignore, there was probably no more button
+    }
+
+    const descriptionSelector = 'ytd-video-secondary-info-renderer #description';
+    const description = (await getInnerText(page, descriptionSelector)).trimEnd();
+    const publishedOnSelector = 'ytd-video-primary-info-renderer #info-text > div:last-child yt-formatted-string';
+    const rawPublishedOn = await getInnerText(page, publishedOnSelector);
+
+    const channelPathSelector = 'ytd-video-owner-renderer yt-formatted-string.ytd-channel-name a';
+    const channelURL = await getAttribute(page, channelPathSelector, 'href');
+
+    const recommendationURLsSelector = 'ytd-watch-next-secondary-results-renderer ytd-compact-video-renderer a#thumbnail';
+    const recommendationURLs = await getElementsAttribute(page, recommendationURLsSelector, 'href');
+
+    log.info(`Successfully scraped video data from: ${url}`);
 
     return new ScrapedVideoData(
       url,
       rawLikeCount,
       title,
-      '',
-      '',
-      '',
-      [],
+      description,
+      rawPublishedOn,
+      channelURL,
+      recommendationURLs,
     );
   }
 }

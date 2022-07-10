@@ -4,7 +4,7 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 puppeteer.use(StealthPlugin());
 
-class Browser {
+export class Browser {
   constructor(private browser: PuppeteerBrowser) {
 
   }

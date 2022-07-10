@@ -14,8 +14,10 @@ describe('Basic browser tests', () => {
     const page = await browser.newPage();
 
     const video = await ScrapedVideoData.scrape(page, 'https://www.youtube.com/watch?v=a1zevmYu1v4');
+    expect(video.channelURL).toBe('https://www.youtube.com/c/FrançoisMariedeJouvencel');
     expect(video.title).toBe('Drone over Quiet Lake in the Morning');
     expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
+    expect(video.description).toBe('Another Bebop2 footage from a while ago.');
 
     browser.close();
   });
