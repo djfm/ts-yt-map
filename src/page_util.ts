@@ -1,10 +1,8 @@
 import { Page } from 'puppeteer';
 
-export const accept_cookies_if_any = async (page: Page): Promise<boolean> =>  {
-  // await page.waitForNavigation();
-
-  let elt = await page.waitForSelector(
-    ".eom-button-row ytd-button-renderer.style-primary:last-of-type"
+export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
+  const elt = await page.waitForSelector(
+    '.eom-button-row ytd-button-renderer.style-primary:last-of-type',
   );
 
   if (!elt) {
@@ -15,17 +13,17 @@ export const accept_cookies_if_any = async (page: Page): Promise<boolean> =>  {
   return true;
 };
 
-export const get_inner_text = async (page: Page, selector: string): Promise<string> => {
-  let res = await page.evaluate((selector: string) => {
-    let elt = document.querySelector(selector);
+export const getInnerText = async (page: Page, selector: string): Promise<string> => {
+  const res = await page.evaluate((s: string) => {
+    const elt = document.querySelector(s);
     if (!elt) {
-      return "";
+      return null;
     }
     return elt.textContent;
   }, selector);
 
   if (res === null) {
-    throw new Error("Could not get inner text for selector: " + selector);
+    throw new Error(`Could not get inner text for selector: ${selector}`);
   }
 
   return res;

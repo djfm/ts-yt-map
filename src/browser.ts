@@ -11,9 +11,8 @@ class Browser {
 
   static async launch(): Promise<Browser> {
     const puppeteerBrowser = await puppeteer.launch({
-      headless: false,
+      headless: true,
     });
-
 
     return new Browser(puppeteerBrowser);
   }
@@ -23,7 +22,7 @@ class Browser {
   }
 
   public async newPage(): Promise<Page> {
-    let page = await this.browser.newPage();
+    const page = await this.browser.newPage();
     page.setDefaultNavigationTimeout(60000);
     page.setDefaultTimeout(30000);
     return page;
