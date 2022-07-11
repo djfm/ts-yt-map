@@ -1,4 +1,6 @@
 import winston, { format } from 'winston';
+import { ChromeConfig } from './browser';
+import config from '../config/default.json';
 
 export {
   Browser,
@@ -17,6 +19,14 @@ export {
  *    silly: 6 // least serious
  *  };
  */
+
+export interface AppConfig {
+  chrome: ChromeConfig,
+}
+
+// TODO: Validate it
+export const loadConfig = (): AppConfig =>
+  config as AppConfig;
 
 const { combine, colorize, timestamp, label, prettyPrint, json } = format;
 

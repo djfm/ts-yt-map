@@ -1,6 +1,7 @@
 import { Page } from 'puppeteer';
 
 import Browser from '../src/browser';
+import { loadConfig } from '../src/lib';
 import ScrapedVideoData from '../src/video';
 
 jest.setTimeout(60000);
@@ -9,7 +10,8 @@ let browser: Browser;
 let page: Page;
 
 beforeEach(async () => {
-  browser = await Browser.launch();
+  const cfg = loadConfig();
+  browser = await Browser.launch(cfg.chrome);
   page = await browser.newPage();
 });
 
