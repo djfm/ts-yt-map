@@ -1,7 +1,8 @@
 {
   "name": "ts-yt-map",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "browse": "ts-node ./src/bin/test-browser.ts"
   },
   "packageManager": "yarn@3.1.1",
   "dependencies": {

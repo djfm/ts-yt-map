@@ -3,6 +3,7 @@ import { loadConfig } from '../lib';
 
 const start = async (): Promise<Browser> => {
   const cfg = loadConfig();
+  cfg.chrome.headless = false;
   const browser = await Browser.launch(cfg.chrome);
 
   return browser;
@@ -17,3 +18,5 @@ function main() {
     console.error(err);
   });
 }
+
+main();
