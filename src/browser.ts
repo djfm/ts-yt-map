@@ -9,9 +9,9 @@ export class Browser {
 
   }
 
-  static async launch(): Promise<Browser> {
+  static async launch(headless = true): Promise<Browser> {
     const puppeteerBrowser = await puppeteer.launch({
-      headless: true,
+      headless,
       defaultViewport: {
         width: 1980 + Math.round(Math.random() * 100),
         height: 1080 * 2 + Math.round((Math.random() * 500)),
