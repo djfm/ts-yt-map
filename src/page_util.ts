@@ -1,5 +1,5 @@
 import { Page, ElementHandle } from 'puppeteer';
-import { log } from './lib';
+import { log, logRoot } from './lib';
 
 export const navigateTo = async (page: Page, url: string): Promise<void> => {
   log.debug(`Navigating to URL: ${url}`);
@@ -8,11 +8,13 @@ export const navigateTo = async (page: Page, url: string): Promise<void> => {
 };
 
 export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
+  log.debug('Trying to accept coolies if any...');
   const elt = await page.waitForSelector(
     '.eom-button-row ytd-button-renderer.style-primary:last-of-type',
   );
 
   if (!elt) {
+    log.debug('No cookies were found');
     return false;
   }
 
@@ -20,12 +22,14 @@ export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
   await page.waitForNavigation();
   await page.waitForNetworkIdle();
 
+  log.debug('Cookies were clicked');
+
   return true;
 };
 
 export const takeScreenshot = async (page: Page, prefix: string): Promise<void> => {
-  const url = page.url().split('/').slice(1).join('_');
-  const path = `screenshots/${prefix}_${url}_${new Date().toISOString()}.png`;
+  const url = page.url().split('?')[0].split('/').slice(1).join('_');
+  const path = `${logRoot}/screenshot_${prefix}_${url}_${new Date().toISOString()}.png`;
   await page.screenshot({ path });
 };
 
