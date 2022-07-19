@@ -3,6 +3,7 @@ import { Page } from 'puppeteer';
 import Browser from '../src/browser';
 import { loadConfig } from '../src/lib';
 import ScrapedVideoData from '../src/video';
+import ScrapedChannelData, { ChannelType } from '../src/channel';
 
 jest.setTimeout(60000);
 
@@ -19,7 +20,7 @@ afterEach(async () => {
   await browser.close();
 });
 
-describe('Basic browser tests', () => {
+describe('Basic browser scraping tests', () => {
   it('should scrape a single video', async () => {
     const video = await ScrapedVideoData.scrape(page, 'https://www.youtube.com/watch?v=a1zevmYu1v4');
     expect(video.channelURL).toBe('https://www.youtube.com/c/FrançoisMariedeJouvencel');
@@ -27,5 +28,17 @@ describe('Basic browser tests', () => {
     expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
     expect(video.description).toBe('Another Bebop2 footage from a while ago.');
     expect(video.recommendationURLs.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('should scrape a single channel', async () => {
+    const channel = await ScrapedChannelData.scrape(page, 'https://www.youtube.com/c/FrançoisMariedeJouvencel');
+
+    expect(channel.htmlLang).toBe('en');
+    expect(channel.humanName).toBe('François-Marie de Jouvencel');
+    expect(channel.shortName).toBe('FrançoisMariedeJouvencel');
+    expect(channel.rawSubscriberCount).toMatch(/^\d\s+subscribers?$/);
+    expect(channel.description).toBe('[youchoose:15068d5ba5e3b86d1182fbef8d0ae938cb091c63]');
+    expect(channel.channelType).toBe(ChannelType.C);
+    expect(channel.youtubeId).toBe('UCmHeND0P_fw8BLk8ITNzvHQ');
   });
 });

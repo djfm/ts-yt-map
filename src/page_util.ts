@@ -10,7 +10,7 @@ export const navigateTo = async (page: Page, url: string): Promise<void> => {
 export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
   log.debug('Trying to accept coolies if any...');
   const elt = await page.waitForSelector(
-    '.eom-button-row ytd-button-renderer.style-primary:last-of-type',
+    '.eom-button-row ytd-button-renderer.style-primary:last-of-type, [aria-label*="Accept"]',
   );
 
   if (!elt) {
@@ -41,10 +41,10 @@ const tryToGetInnerText = async (
     if (!elt) {
       return null;
     }
-    return elt.textContent;
+    return elt.textContent?.trim();
   }, selector);
 
-  if (res === null) {
+  if (!res) {
     if (remainingAttempts > 0) {
       // eslint-disable-next-line no-promise-executor-return
       await new Promise((resolve) => setTimeout(resolve, 5000));

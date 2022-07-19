@@ -16,6 +16,7 @@ export const blockUselessRequests = async (page: Page): Promise<void> => {
   await page.setRequestInterception(true);
 
   page.on('request', (request) => {
+    console.log(request.method(), request.url());
     if (request.url().startsWith('https://www.youtube.com/api/')) {
       request.abort();
       return;
@@ -38,7 +39,7 @@ export const blockUselessRequests = async (page: Page): Promise<void> => {
 
     const u = URL.parse(request.url());
 
-    if (u.hostname !== 'www.youtube.com') {
+    if (u.hostname !== 'www.youtube.com' && u.hostname !== 'consent.youtube.com') {
       request.abort();
       return;
     }
@@ -82,7 +83,7 @@ export class Browser {
     page.setDefaultNavigationTimeout(60000);
     page.setDefaultTimeout(30000);
 
-    await blockUselessRequests(page);
+    // await blockUselessRequests(page);
 
     return page;
   }
