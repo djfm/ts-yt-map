@@ -26,5 +26,6 @@ describe('Basic browser tests', () => {
     expect(video.title).toBe('Drone over Quiet Lake in the Morning');
     expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
     expect(video.description).toBe('Another Bebop2 footage from a while ago.');
+    expect(video.recommendationURLs.length).toBeGreaterThanOrEqual(10);
   });
 });
