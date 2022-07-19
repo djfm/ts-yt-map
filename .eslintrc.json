@@ -30,6 +30,7 @@
     "no-useless-constructor": "off",
     "implicit-arrow-linebreak": "off",
     "function-paren-newline": "off",
-    "object-curly-newline": "off"
+    "object-curly-newline": "off",
+    "no-shadow": "off"
   }
 }
