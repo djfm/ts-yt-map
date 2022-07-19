@@ -1,9 +1,9 @@
 import { join } from 'path';
-import { mkdirSync } from 'fs';
+import { mkdirSync, readFileSync } from 'fs';
 
+import { parse as parseYAML } from 'yaml';
 import winston, { format } from 'winston';
 import { ChromeConfig } from './browser';
-import config from '../config/default.json';
 
 export {
   Browser,
@@ -27,9 +27,14 @@ export interface AppConfig {
   chrome: ChromeConfig,
 }
 
-// TODO: Validate it
-export const loadConfig = (): AppConfig =>
-  config as AppConfig;
+export const loadConfig = (): AppConfig => {
+  const configPath = join(__dirname, '..', 'config', 'default.yaml');
+  const configSource = readFileSync(configPath).toString();
+  const config = parseYAML(configSource);
+  // TODO: Validate the config!
+
+  return config as AppConfig;
+};
 
 const { colorize, combine, timestamp, label, prettyPrint, json } = format;
 

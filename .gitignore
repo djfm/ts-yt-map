@@ -12,4 +12,4 @@ node_modules
 # Documentation here: https://yarnpkg.com/features/zero-installs
 !/.yarn/cache
 #/.pnp.*ht
-config/default.json
+config/default.yaml
