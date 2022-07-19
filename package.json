@@ -4,7 +4,7 @@
     "test": "jest",
     "browse": "ts-node ./src/bin/test-browser.ts"
   },
-  "packageManager": "yarn@3.1.1",
+  "packageManager": "yarn@3.2.1",
   "dependencies": {
     "@types/jest": "^28.1.4",
     "@types/node": "^18.0.3",
