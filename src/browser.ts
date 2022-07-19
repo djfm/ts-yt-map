@@ -22,7 +22,7 @@ export class Browser {
     }
 
     const puppeteerBrowser = await puppeteer.launch({
-      headless: cfg.headless,
+      headless: cfg.headless ?? false,
       defaultViewport: {
         width: 1980 + Math.round(Math.random() * 100),
         height: 1080 * 2 + Math.round((Math.random() * 500)),
