@@ -1,32 +1,17 @@
+import { Page } from 'puppeteer';
 import Browser from '../browser';
 import { loadConfig } from '../lib';
 
-const start = async (): Promise<Browser> => {
+const start = async (): Promise<Page> => {
   const cfg = loadConfig();
+
   cfg.chrome.headless = false;
+  cfg.chrome.viewport_width = 1980;
+  cfg.chrome.viewport_height = 1080;
+
   const browser = await Browser.launch(cfg.chrome);
-
-  /*
   const page = await browser.newPage();
-
-  await page.setRequestInterception(true);
-
-  page.on('request', (request) => {
-    // eslint-disable-next-line no-console
-    console.log(request.method(), request.url(), request.headers());
-    if (request.method() === 'POST') {
-      // request.abort();
-      request.continue();
-    }
-  });
-
-  page.on('response', (response) => {
-    // eslint-disable-next-line no-console
-    console.log(response.status(), response.url(), response.headers());
-  });
-  */
-
-  return browser;
+  return page;
 };
 
 function main() {

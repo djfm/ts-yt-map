@@ -1,3 +1,4 @@
+import URL from 'url';
 import { Page, Browser as PuppeteerBrowser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -7,7 +8,44 @@ puppeteer.use(StealthPlugin());
 export interface ChromeConfig {
   headless: boolean;
   proxy_uri: string | false;
+  viewport_width: undefined | number;
+  viewport_height: undefined | number;
 }
+
+export const blockUselessRequests = async (page: Page): Promise<void> => {
+  await page.setRequestInterception(true);
+
+  page.on('request', (request) => {
+    if (request.url().startsWith('https://www.youtube.com/api/')) {
+      request.abort();
+      return;
+    }
+
+    if (request.url().endsWith('/ad_status.js')) {
+      request.abort();
+      return;
+    }
+
+    if (request.method() === 'POST') {
+      if (request.url() === 'https://www.youtube.com/upgrade_visitor_cookie?eom=1') {
+        request.continue();
+        return;
+      }
+
+      request.abort();
+      return;
+    }
+
+    const u = URL.parse(request.url());
+
+    if (u.hostname !== 'www.youtube.com') {
+      request.abort();
+      return;
+    }
+
+    request.continue();
+  });
+};
 
 export class Browser {
   constructor(private browser: PuppeteerBrowser) {
@@ -21,12 +59,14 @@ export class Browser {
       args.push(`--proxy-server=${cfg.proxy_uri}`);
     }
 
+    const defaultViewport = {
+      width: cfg.viewport_width ?? 1980 + Math.round(Math.random() * 100),
+      height: cfg.viewport_height ?? 1980 + Math.round(Math.random() * 100),
+    };
+
     const puppeteerBrowser = await puppeteer.launch({
       headless: cfg.headless ?? false,
-      defaultViewport: {
-        width: 1980 + Math.round(Math.random() * 100),
-        height: 1080 * 2 + Math.round((Math.random() * 500)),
-      },
+      defaultViewport,
       args,
     });
 
@@ -41,6 +81,8 @@ export class Browser {
     const page = await this.browser.newPage();
     page.setDefaultNavigationTimeout(60000);
     page.setDefaultTimeout(30000);
+
+    await blockUselessRequests(page);
 
     return page;
   }
