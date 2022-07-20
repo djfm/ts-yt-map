@@ -4,7 +4,15 @@ import { log, logRoot } from './lib';
 export const navigateTo = async (page: Page, url: string): Promise<void> => {
   log.debug(`Navigating to URL: ${url}`);
   await page.goto(url);
-  await page.waitForNetworkIdle();
+
+  try {
+    await page.waitForNetworkIdle({
+      timeout: 20000,
+      idleTime: 500,
+    });
+  } catch (e) {
+    log.warn(`Failed to wait for network idle: ${url}`, { error: e });
+  }
 };
 
 export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {

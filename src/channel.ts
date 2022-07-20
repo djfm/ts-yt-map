@@ -44,11 +44,13 @@ class ScrapedChannelData {
     public description: string,
   ) {}
 
-  public static async scrape(page: Page, url: string): Promise<ScrapedChannelData> {
+  public static async scrape(
+    page: Page, url: string, acceptCookies = true,
+  ): Promise<ScrapedChannelData> {
     log.info(`Scraping channel URL: ${url}`);
 
     try {
-      return await ScrapedChannelData.try_scrape(page, url);
+      return await ScrapedChannelData.try_scrape(page, url, acceptCookies);
     } catch (e) {
       log.error(`Failed to scrape channel URL: ${url}`, { error: e });
       await takeScreenshot(page, 'channel_scrape_failure');
@@ -56,9 +58,14 @@ class ScrapedChannelData {
     }
   }
 
-  static async try_scrape(page: Page, url: string): Promise<ScrapedChannelData> {
+  static async try_scrape(
+    page: Page, url: string, acceptCookies: boolean,
+  ): Promise<ScrapedChannelData> {
     await navigateTo(page, url);
-    await acceptCookiesIfAny(page);
+
+    if (acceptCookies) {
+      await acceptCookiesIfAny(page);
+    }
 
     const htmlLang = await getAttribute(page, 'html', 'lang');
 

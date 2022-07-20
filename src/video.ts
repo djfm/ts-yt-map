@@ -21,11 +21,13 @@ class ScrapedVideoData {
     public recommendationURLs: string[],
   ) {}
 
-  public static async scrape(page: Page, url: string): Promise<ScrapedVideoData> {
+  public static async scrape(
+    page: Page, url: string, acceptCookies = true,
+  ): Promise<ScrapedVideoData> {
     log.info(`Scraping video URL: ${url}`);
 
     try {
-      return await ScrapedVideoData.try_scrape(page, url);
+      return await ScrapedVideoData.try_scrape(page, url, acceptCookies);
     } catch (e) {
       log.error(`Failed to scrape video URL: ${url}`, { error: e });
       await takeScreenshot(page, 'video_scrape_failure');
@@ -33,9 +35,14 @@ class ScrapedVideoData {
     }
   }
 
-  static async try_scrape(page: Page, url: string): Promise<ScrapedVideoData> {
+  static async try_scrape(
+    page: Page, url: string, acceptCookies: boolean,
+  ): Promise<ScrapedVideoData> {
     await navigateTo(page, url);
-    await acceptCookiesIfAny(page);
+
+    if (acceptCookies) {
+      await acceptCookiesIfAny(page);
+    }
 
     const titleSelector = '#primary-inner h1.title yt-formatted-string';
     const title = await getInnerText(page, titleSelector);
