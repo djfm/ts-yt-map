@@ -28,6 +28,10 @@ describe('Basic browser scraping tests', () => {
     expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
     expect(video.description).toBe('Another Bebop2 footage from a while ago.');
     expect(video.recommendationURLs.length).toBeGreaterThanOrEqual(10);
+
+    video.recommendationURLs.forEach((url) => {
+      expect(url).toMatch(/^https:\/\/www\.youtube\.com\/watch\?v=/);
+    });
   });
 
   it('should scrape a single channel', async () => {

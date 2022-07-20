@@ -62,7 +62,9 @@ class ScrapedVideoData {
     const channelURL = await getAttribute(page, channelPathSelector, 'href');
 
     const recommendationURLsSelector = 'ytd-watch-next-secondary-results-renderer ytd-compact-video-renderer a#thumbnail';
-    const recommendationURLs = await getElementsAttribute(page, recommendationURLsSelector, 'href');
+    const recommendationURLs = (await getElementsAttribute(page, recommendationURLsSelector, 'href')).map(
+      (url) => url.replace(/^JSHandle:/, ''),
+    );
 
     log.info(`Successfully scraped video data from: ${url}`);
 
