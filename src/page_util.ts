@@ -60,7 +60,6 @@ const tryToGetInnerText = async (
 export const getInnerText = async (page: Page, selector: string): Promise<string> => {
   log.debug(`Getting inner text for selector: '${selector}'`);
 
-  log.silly("Getting inner text for selector '%s'", selector);
   return tryToGetInnerText(page, selector, 2);
 };
 
