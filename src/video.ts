@@ -27,6 +27,7 @@ class ScrapedVideoData {
     try {
       return await ScrapedVideoData.try_scrape(page, url);
     } catch (e) {
+      log.error(`Failed to scrape video URL: ${url}`, { error: e });
       await takeScreenshot(page, 'video_scrape_failure');
       throw e;
     }

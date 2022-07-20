@@ -4,7 +4,6 @@ import { log } from './lib';
 
 import {
   acceptCookiesIfAny,
-  getElementsAttribute,
   getAttribute,
   getInnerText,
   navigateTo,
@@ -51,6 +50,7 @@ class ScrapedChannelData {
     try {
       return await ScrapedChannelData.try_scrape(page, url);
     } catch (e) {
+      log.error(`Failed to scrape channel URL: ${url}`, { error: e });
       await takeScreenshot(page, 'channel_scrape_failure');
       throw e;
     }
