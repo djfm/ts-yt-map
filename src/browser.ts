@@ -12,6 +12,8 @@ export interface ChromeConfig {
   viewport_height: undefined | number;
 }
 
+// This is experimental and not used as of now,
+// because it makes scraping channels fail.
 export const blockUselessRequests = async (page: Page): Promise<void> => {
   await page.setRequestInterception(true);
 
