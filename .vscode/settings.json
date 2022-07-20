@@ -2,5 +2,6 @@
   "cSpell.words": [
     "airbnb",
     "FrançoisMariedeJouvencel"
-  ]
+  ],
+  "jest.jestCommandLine": "yarn test"
 }
