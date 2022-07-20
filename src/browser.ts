@@ -16,7 +16,6 @@ export const blockUselessRequests = async (page: Page): Promise<void> => {
   await page.setRequestInterception(true);
 
   page.on('request', (request) => {
-    console.log(request.method(), request.url());
     if (request.url().startsWith('https://www.youtube.com/api/')) {
       request.abort();
       return;
