@@ -3,5 +3,8 @@
     "airbnb",
     "FrançoisMariedeJouvencel"
   ],
-  "jest.jestCommandLine": "yarn test"
+  "jest.jestCommandLine": "yarn test",
+  "jest.autoRun": {
+    "enabled": false,
+  }
 }
