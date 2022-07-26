@@ -1,7 +1,3 @@
 chrome:
-  // fully qualified URL to a proxy that will be used by chrome,
-  // leave false for no proxy
   proxy_uri: false
-
-  // whether to run chrome in headless mode, better leave it to true
   headless: true
