@@ -25,6 +25,9 @@ export {
 
 export interface AppConfig {
   chrome: ChromeConfig,
+  server: {
+    db_connection_string: string
+  }
 }
 
 export const loadConfig = (): AppConfig => {

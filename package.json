@@ -2,12 +2,14 @@
   "name": "ts-yt-map",
   "scripts": {
     "test": "jest",
-    "browse": "ts-node ./src/bin/test-browser.ts"
+    "browse": "ts-node ./src/bin/test-browser.ts",
+    "server": "ts-node ./src/bin/server.ts"
   },
   "packageManager": "yarn@3.2.1",
   "dependencies": {
     "@types/jest": "^28.1.4",
     "@types/node": "^18.0.3",
+    "@types/pg": "^8.6.5",
     "@types/puppeteer": "^5.4.6",
     "@types/winston": "^2.4.4",
     "@types/yaml": "^1.9.7",
@@ -17,6 +19,8 @@
     "eslint-config-airbnb-base": "latest",
     "eslint-plugin-import": "^2.25.2",
     "jest": "^28.1.2",
+    "pg": "^8.7.3",
+    "postgres-migrations": "^5.3.0",
     "puppeteer": "^15.3.2",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-stealth": "^2.11.0",

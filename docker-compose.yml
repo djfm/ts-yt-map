@@ -6,11 +6,11 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: hello
-      POSTGRES_DB: ytmap
+      POSTGRES_DB: yt_rec_graph
     ports:
       - "5432:5432"
     volumes:
-      - ytmap:/var/lib/postgresql/data
+      - yt_graph:/var/lib/postgresql/data
       - ./my-postgres.conf:/etc/postgresql/postgresql.conf
   adminer:
     image: adminer
@@ -18,5 +18,5 @@ services:
     ports:
       - "8080:8080"
 volumes:
-  ytmap:
+  yt_graph:
     driver: local

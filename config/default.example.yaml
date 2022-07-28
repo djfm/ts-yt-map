@@ -1,3 +1,5 @@
 chrome:
   proxy_uri: false
   headless: true
+server:
+  db_connection_string: postgres://postgres:hello@localhost:5432/yt_rec_graph
