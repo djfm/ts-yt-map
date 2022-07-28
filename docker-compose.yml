@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hello
+      POSTGRES_DB: ytmap
+    ports:
+      - "5432:5432"
+    volumes:
+      - ytmap:/var/lib/postgresql/data
+      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+volumes:
+  ytmap:
+    driver: local
