@@ -26,7 +26,13 @@ export {
 export interface AppConfig {
   chrome: ChromeConfig,
   server: {
-    db_connection_string: string
+    db: {
+      host: string,
+      port: number,
+      username: string,
+      password: string,
+      database: string,
+    }
   }
 }
 
@@ -35,7 +41,6 @@ export const loadConfig = (): AppConfig => {
   const configSource = readFileSync(configPath).toString();
   const config = parseYAML(configSource);
   // TODO: Validate the config!
-
   return config as AppConfig;
 };
 

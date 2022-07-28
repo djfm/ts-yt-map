@@ -1,4 +1,6 @@
 import { Page } from 'puppeteer';
+import { Entity, Column, PrimaryColumn } from 'typeorm';
+
 import { log } from './lib';
 
 import {
@@ -11,15 +13,26 @@ import {
 } from './page_util';
 
 class ScrapedVideoData {
-  constructor(
-    public videoUrl: string,
-    public rawLikeCount: string,
-    public title: string,
-    public description: string,
-    public rawPublishedOn: string,
-    public channelURL: string,
-    public recommendationURLs: string[],
-  ) {}
+  @Column()
+  public url: string = '';
+
+  @Column()
+  public rawLikeCount: number = 0;
+
+  @Column()
+  public title: string = '';
+
+
+  @Column()
+  public description: string = '';
+
+  @Column()
+  public rawPublishedOn: string = '';
+
+  @Column()
+  public channelURL: string = '';
+
+  public recommendationURLs: string[] = [];
 
   public static async scrape(
     page: Page, url: string, acceptCookies = true,
@@ -38,6 +51,9 @@ class ScrapedVideoData {
   static async try_scrape(
     page: Page, url: string, acceptCookies: boolean,
   ): Promise<ScrapedVideoData> {
+    const res = new ScrapedVideoData();
+    res.url = url;
+
     await navigateTo(page, url);
 
     if (acceptCookies) {
@@ -61,30 +77,37 @@ class ScrapedVideoData {
     }
 
     const descriptionSelector = 'ytd-video-secondary-info-renderer #description';
-    const description = (await getInnerText(page, descriptionSelector)).trimEnd();
+    res.description = (await getInnerText(page, descriptionSelector)).trimEnd();
     const publishedOnSelector = 'ytd-video-primary-info-renderer #info-text > div:last-child yt-formatted-string';
-    const rawPublishedOn = await getInnerText(page, publishedOnSelector);
+    res.rawPublishedOn = await getInnerText(page, publishedOnSelector);
 
     const channelPathSelector = 'ytd-video-owner-renderer yt-formatted-string.ytd-channel-name a';
-    const channelURL = await getAttribute(page, channelPathSelector, 'href');
+    res.channelURL = await getAttribute(page, channelPathSelector, 'href');
 
     const recommendationURLsSelector = 'ytd-watch-next-secondary-results-renderer ytd-compact-video-renderer a#thumbnail';
-    const recommendationURLs = (await getElementsAttribute(page, recommendationURLsSelector, 'href')).map(
+    res.recommendationURLs = (await getElementsAttribute(page, recommendationURLsSelector, 'href')).map(
       (url) => url.replace(/^JSHandle:/, ''),
     );
 
     log.info(`Successfully scraped video data from: ${url}`);
 
-    return new ScrapedVideoData(
-      url,
-      rawLikeCount,
-      title,
-      description,
-      rawPublishedOn,
-      channelURL,
-      recommendationURLs,
-    );
+    return res;
   }
+}
+
+@Entity()
+export class Video extends ScrapedVideoData {
+  @PrimaryColumn()
+  public id: string = '';
+
+  @Column()
+  public crawled: boolean = false;
+
+  @Column()
+  public latestCrawlAttemtedAt: Date = new Date(0);
+
+  @Column()
+  public crawlAttemptCount: number = 0;
 }
 
 export default ScrapedVideoData;

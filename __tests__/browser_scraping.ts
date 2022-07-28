@@ -23,6 +23,7 @@ afterEach(async () => {
 describe('Basic browser scraping tests', () => {
   it('should scrape a single video', async () => {
     const video = await ScrapedVideoData.scrape(page, 'https://www.youtube.com/watch?v=a1zevmYu1v4');
+    expect(video.url).toBe('https://www.youtube.com/watch?v=a1zevmYu1v4');
     expect(video.channelURL).toBe('https://www.youtube.com/c/FrançoisMariedeJouvencel');
     expect(video.title).toBe('Drone over Quiet Lake in the Morning');
     expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
