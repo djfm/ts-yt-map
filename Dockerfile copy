@@ -1,0 +1,6 @@
+FROM node:latest
+
+RUN nodejs --version
+COPY . /root/yt_rec_graph
+WORKDIR /root/yt_rec_graph
+RUN yarn

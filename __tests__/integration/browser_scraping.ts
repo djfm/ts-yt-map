@@ -1,9 +1,9 @@
 import { Page } from 'puppeteer';
 
-import Browser from '../src/browser';
-import { loadConfig } from '../src/lib';
-import ScrapedVideoData from '../src/video';
-import ScrapedChannelData, { ChannelType } from '../src/channel';
+import Browser from '../../src/browser';
+import { loadConfig } from '../../src/lib';
+import ScrapedVideoData from '../../src/video';
+import ScrapedChannelData, { ChannelType } from '../../src/channel';
 
 jest.setTimeout(60000);
 

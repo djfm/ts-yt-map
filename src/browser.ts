@@ -61,6 +61,11 @@ export class Browser {
       args.push(`--proxy-server=${cfg.proxy_uri}`);
     }
 
+    // for docker, running as root requires this
+    if (process.env.UID === undefined) {
+      args.push('--no-sandbox', '--disable-setuid-sandbox');
+    }
+
     const defaultViewport = {
       width: cfg.viewport_width ?? 1980 + Math.round(Math.random() * 100),
       height: cfg.viewport_height ?? 1980 + Math.round(Math.random() * 100),

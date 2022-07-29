@@ -1,4 +1,4 @@
-import ScrapedRecommendationData from '../src/scraper';
+import ScrapedRecommendationData from '../../src/scraper';
 
 jest.setTimeout(300000);
 
