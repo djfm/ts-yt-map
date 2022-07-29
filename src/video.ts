@@ -1,5 +1,6 @@
 import { Page } from 'puppeteer';
 import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Length } from 'class-validator';
 
 import { log } from './lib';
 
@@ -14,22 +15,27 @@ import {
 
 class ScrapedVideoData {
   @Column()
+  @Length(1)
   public url: string = '';
 
   @Column()
-  public rawLikeCount: number = 0;
+  @Length(1)
+  public rawLikeCount: string = '';
 
   @Column()
+  @Length(1)
   public title: string = '';
 
-
   @Column()
+  @Length(1)
   public description: string = '';
 
   @Column()
+  @Length(1)
   public rawPublishedOn: string = '';
 
   @Column()
+  @Length(1)
   public channelURL: string = '';
 
   public recommendationURLs: string[] = [];
@@ -61,10 +67,10 @@ class ScrapedVideoData {
     }
 
     const titleSelector = '#primary-inner h1.title yt-formatted-string';
-    const title = await getInnerText(page, titleSelector);
+    res.title = await getInnerText(page, titleSelector);
 
     const likeCountSelector = '#primary-inner #top-level-buttons-computed yt-formatted-string';
-    const rawLikeCount = await getInnerText(page, likeCountSelector);
+    res.rawLikeCount = await getInnerText(page, likeCountSelector);
 
     const descriptionMoreButtonSelector = 'ytd-video-secondary-info-renderer .more-button';
     try {
@@ -104,7 +110,7 @@ export class Video extends ScrapedVideoData {
   public crawled: boolean = false;
 
   @Column()
-  public latestCrawlAttemtedAt: Date = new Date(0);
+  public latestCrawlAttemptedAt: Date = new Date(0);
 
   @Column()
   public crawlAttemptCount: number = 0;

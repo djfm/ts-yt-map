@@ -1,7 +1,8 @@
 {
   "cSpell.words": [
     "airbnb",
-    "FrançoisMariedeJouvencel"
+    "FrançoisMariedeJouvencel",
+    "typeorm"
   ],
   "jest.jestCommandLine": "yarn test",
   "jest.autoRun": {

@@ -1,5 +1,8 @@
 import { Page } from 'puppeteer';
 
+import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Length } from 'class-validator';
+
 import { log } from './lib';
 
 import {
@@ -33,16 +36,36 @@ const asChannelType = (s: string): ChannelType => {
 };
 
 class ScrapedChannelData {
-  constructor(
-    public channelURL: string,
-    public htmlLang: string,
-    public channelType: ChannelType,
-    public shortName: string,
-    public humanName: string,
-    public youtubeId: string,
-    public rawSubscriberCount: string,
-    public description: string,
-  ) {}
+  @Column()
+  @Length(1)
+  public url: string = '';
+
+  @Column()
+  @Length(1)
+  public htmlLang: string = 'en';
+
+  @Column()
+  public channelType: ChannelType = ChannelType.C;
+
+  @Column()
+  @Length(1)
+  public shortName: string = '';
+
+  @Column()
+  @Length(1)
+  public humanName: string = '';
+
+  @Column()
+  @Length(1)
+  public youtubeId: string = '';
+
+  @Column()
+  @Length(1)
+  public rawSubscriberCount: string = '';
+
+  @Column()
+  @Length(1)
+  public description: string = '';
 
   public static async scrape(
     page: Page, url: string, acceptCookies = true,
@@ -67,7 +90,9 @@ class ScrapedChannelData {
       await acceptCookiesIfAny(page);
     }
 
-    const htmlLang = await getAttribute(page, 'html', 'lang');
+    const res = new ScrapedChannelData();
+
+    res.htmlLang = await getAttribute(page, 'html', 'lang');
 
     const urlSegments = url.split(/\/+/);
     if (urlSegments.length !== 4) {
@@ -75,9 +100,9 @@ class ScrapedChannelData {
       throw new Error('Unexpected URL format in channel URL.');
     }
 
-    const shortName = decodeURIComponent(urlSegments[3]);
-    const humanName = await getInnerText(page, '#channel-name yt-formatted-string');
-    const rawSubscriberCount = await getInnerText(page, '#subscriber-count');
+    res.shortName = decodeURIComponent(urlSegments[3]);
+    res.humanName = await getInnerText(page, '#channel-name yt-formatted-string');
+    res.rawSubscriberCount = await getInnerText(page, '#subscriber-count');
 
     const youtubeId = (await getAttribute(page, 'link[rel=canonical]', 'href')).split(/\/+/).at(-1);
 
@@ -85,21 +110,14 @@ class ScrapedChannelData {
       throw new Error('Could not find channel youtubeId');
     }
 
+    res.youtubeId = youtubeId;
+
     navigateTo(page, `${url}/about`);
-    const description = await getInnerText(page, '#left-column #description');
+    res.description = await getInnerText(page, '#left-column #description');
 
-    const channelType = asChannelType(urlSegments[2]);
+    res.channelType = asChannelType(urlSegments[2]);
 
-    return new ScrapedChannelData(
-      url,
-      htmlLang,
-      channelType,
-      shortName,
-      humanName,
-      youtubeId,
-      rawSubscriberCount,
-      description,
-    );
+    return res;
   }
 }
 
