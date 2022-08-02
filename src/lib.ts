@@ -26,6 +26,7 @@ export {
 export interface AppConfig {
   chrome: ChromeConfig,
   server: {
+    port: number,
     db: {
       host: string,
       port: number,

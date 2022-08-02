@@ -2,6 +2,7 @@ chrome:
   proxy_uri: false
   headless: true
 server:
+  port: 38472
   db:
     host: localhost
     port: 5432
