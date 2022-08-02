@@ -6,10 +6,22 @@ export const navigateTo = async (page: Page, url: string): Promise<void> => {
   await page.goto(url);
 
   try {
+    /*
+    let count = 0;
+    await page.waitForRequest((req) => {
+      count += 1;
+      return count > 5;
+    });
+    */
+
+    await page.waitForSelector('#logo-icon');
+
+    /*
     await page.waitForNetworkIdle({
       timeout: 20000,
       idleTime: 500,
     });
+    */
   } catch (e) {
     log.warn(`Failed to wait for network idle: ${url}`, { error: e });
   }
