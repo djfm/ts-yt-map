@@ -1,0 +1,11 @@
+chrome:
+  proxy_uri: false
+  headless: true
+server:
+  port: 38473
+  db:
+    host: localhost
+    port: 5433
+    username: test
+    password: test
+    database: test-yt_rec_graph

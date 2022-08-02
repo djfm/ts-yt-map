@@ -1,5 +1,17 @@
 version: "3.9"
 services:
+  app:
+    image: yt-map
+    build: .
+  postgres-test:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test-yt_rec_graph
+    ports:
+      - "5433:5433"
   postgres:
     image: postgres
     restart: always

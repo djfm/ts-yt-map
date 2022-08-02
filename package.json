@@ -4,7 +4,7 @@
     "test": "jest",
     "browse": "ts-node ./src/bin/test-browser.ts",
     "server": "ts-node ./src/bin/server.ts",
-    "test-docker": "docker-compose -f docker-compose.integration-tests.yaml up --build --remove-orphans -d && docker run -t yt-map-app-test yarn jest"
+    "test-docker": "docker-compose up --build --remove-orphans -d && docker run yt-map yarn jest"
   },
   "packageManager": "yarn@3.2.1",
   "dependencies": {
