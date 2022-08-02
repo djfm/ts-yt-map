@@ -32,7 +32,7 @@ async function main() {
   app.post('/video/get-url-to-crawl', async (req, res) => {
     const v = await video.query(`
       UPDATE video set latest_crawl_attempted_at = now()
-      WHERE id = (SELECT min(id) FROM video WHERE now() - latest_crawl_attempted_at > '10 minutes'::interval OR latest_crawl_attempted_at IS NULL))
+      WHERE id = (SELECT min(id) FROM video WHERE now() - latest_crawl_attempted_at > '10 minutes'::interval OR latest_crawl_attempted_at IS NULL)
       RETURNING url
     `);
 
