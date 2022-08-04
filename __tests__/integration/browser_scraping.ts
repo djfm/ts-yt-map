@@ -11,7 +11,7 @@ let browser: Browser;
 let page: Page;
 
 beforeEach(async () => {
-  const cfg = loadConfig();
+  const cfg = loadConfig('');
   browser = await Browser.launch(cfg.chrome);
   page = await browser.newPage();
 });

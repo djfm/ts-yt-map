@@ -8,7 +8,7 @@ import { loadConfig } from '../lib';
 import { Video } from '../video';
 
 async function main() {
-  const cfg = loadConfig();
+  const cfg = loadConfig('');
   const pg = new PgClient({
     ...cfg.server.db,
     user: cfg.server.db.username,

@@ -21,7 +21,7 @@ class ScrapedRecommendationData {
 
   static async try_scrapeRecommendations(videoURL: string): Promise<ScrapedRecommendationData> {
     log.info(`Scraping recommendations from URL: ${videoURL}`);
-    const cfg = loadConfig();
+    const cfg = loadConfig('');
     const browser = await Browser.launch(cfg.chrome);
     const page = await browser.newPage();
 

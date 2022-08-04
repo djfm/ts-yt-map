@@ -23,9 +23,10 @@ export {
  *  };
  */
 
-export interface AppConfig {
+export interface ServerConfig {
   chrome: ChromeConfig,
   server: {
+    password: string,
     port: number,
     db: {
       host: string,
@@ -37,13 +38,19 @@ export interface AppConfig {
   }
 }
 
-export const loadConfig = (): AppConfig => {
+export const loadConfig = (serverPassword: string): ServerConfig => {
+  const password = process.argv[2];
+
   const fname = process.env.node_env === 'production' ? 'production.yaml' : 'test.yaml';
   const configPath = join(__dirname, '..', 'config', fname);
   const configSource = readFileSync(configPath).toString();
   const config = parseYAML(configSource);
+  config.server.password = password;
+
+  console.log(config);
+
   // TODO: Validate the config!
-  return config as AppConfig;
+  return config as ServerConfig;
 };
 
 const { colorize, combine, timestamp, label, prettyPrint, json } = format;
