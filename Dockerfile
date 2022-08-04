@@ -9,5 +9,4 @@ RUN apt-get update \
   --no-install-recommends
 COPY . /root/yt_rec_graph
 WORKDIR /root/yt_rec_graph
-RUN mv ./config/default.example.yaml ./config/default.yaml
 RUN yarn

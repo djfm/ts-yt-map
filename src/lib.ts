@@ -38,7 +38,7 @@ export interface AppConfig {
 }
 
 export const loadConfig = (): AppConfig => {
-  const fname = process.env.node_env === 'production' ? 'default.yaml' : 'default.test.yaml';
+  const fname = process.env.node_env === 'production' ? 'production.yaml' : 'test.yaml';
   const configPath = join(__dirname, '..', 'config', fname);
   const configSource = readFileSync(configPath).toString();
   const config = parseYAML(configSource);

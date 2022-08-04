@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: test
       POSTGRES_DB: test-yt_rec_graph
     ports:
-      - "5433:5433"
+      - "5433:5432"
   postgres:
     image: postgres
     restart: always
