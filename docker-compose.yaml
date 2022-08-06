@@ -12,6 +12,9 @@ services:
       POSTGRES_DB: test-yt_rec_graph
     ports:
       - "5433:5432"
+    volumes:
+      - yt_graph-test:/var/lib/postgresql/data
+      - ./my-postgres.conf:/etc/postgresql/postgresql-test.conf
   postgres:
     image: postgres
     restart: always
@@ -31,4 +34,6 @@ services:
       - "8080:8080"
 volumes:
   yt_graph:
+    driver: local
+  yt_graph-test:
     driver: local
