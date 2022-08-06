@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer';
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length } from 'class-validator';
 
 import { log } from './lib';
@@ -103,8 +103,8 @@ class ScrapedVideoData {
 
 @Entity()
 export class Video extends ScrapedVideoData {
-  @PrimaryColumn()
-  public id: string = '';
+  @PrimaryGeneratedColumn()
+  public id: number = -1;
 
   @Column()
   public crawled: boolean = false;
@@ -114,6 +114,25 @@ export class Video extends ScrapedVideoData {
 
   @Column()
   public crawlAttemptCount: number = 0;
+
+  @Column()
+  public likeCount: number = -1;
+
+  @Column()
+  public publishedOn: Date = new Date(0);
+
+  @Column()
+  public channelId: number = -1;
+
+  constructor(video?: ScrapedVideoData) {
+    super();
+    if (video) {
+      for (const [k, v] of Object.entries(video)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this as any)[k] = v;
+      }
+    }
+  }
 }
 
 export default ScrapedVideoData;

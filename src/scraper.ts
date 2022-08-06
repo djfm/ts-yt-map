@@ -3,7 +3,7 @@ import Browser from './browser';
 import ScrapedChannelData from './channel';
 import ScrapedVideoData from './video';
 
-class ScrapedRecommendationData {
+export class ScrapedRecommendationData {
   constructor(
     public fromChannel: ScrapedChannelData,
     public from: ScrapedVideoData,

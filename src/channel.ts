@@ -1,6 +1,6 @@
 import { Page } from 'puppeteer';
 
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length } from 'class-validator';
 
 import { log } from './lib';
@@ -35,7 +35,8 @@ const asChannelType = (s: string): ChannelType => {
   throw new Error(`Unknown channel type ${s}`);
 };
 
-class ScrapedChannelData {
+@Entity()
+export class ScrapedChannelData {
   @Column()
   @Length(1)
   public url: string = '';
@@ -122,3 +123,22 @@ class ScrapedChannelData {
 }
 
 export default ScrapedChannelData;
+
+@Entity()
+export class Channel extends ScrapedChannelData {
+  @PrimaryGeneratedColumn()
+  public id: number = -1;
+
+  @Column()
+  public subscriberCount: number = -1;
+
+  constructor(channel?: ScrapedChannelData) {
+    super();
+    if (channel) {
+      for (const [k, v] of Object.entries(channel)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this as any)[k] = v;
+      }
+    }
+  }
+}

@@ -9,3 +9,4 @@ server:
     username: test
     password: test
     database: test-yt_rec_graph
+seed_video: https://www.youtube.com/watch?v=HqsIOTEbriY

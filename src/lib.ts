@@ -35,19 +35,16 @@ export interface ServerConfig {
       password: string,
       database: string,
     }
-  }
+  },
+  seed_video: string,
 }
 
 export const loadConfig = (serverPassword: string): ServerConfig => {
-  const password = process.argv[2];
-
   const fname = process.env.node_env === 'production' ? 'production.yaml' : 'test.yaml';
   const configPath = join(__dirname, '..', 'config', fname);
   const configSource = readFileSync(configPath).toString();
   const config = parseYAML(configSource);
-  config.server.password = password;
-
-  console.log(config);
+  config.server.password = serverPassword;
 
   // TODO: Validate the config!
   return config as ServerConfig;
