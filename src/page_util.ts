@@ -7,29 +7,7 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 export const navigateTo = async (page: Page, url: string): Promise<void> => {
   log.debug(`Navigating to URL: ${url}`);
   await page.goto(url);
-
-  try {
-    /*
-    let count = 0;
-    await page.waitForRequest((req) => {
-      count += 1;
-      return count > 5;
-    });
-    */
-
-    // await page.waitForSelector('#logo-icon');
-
-    /*
-    await page.waitForNetworkIdle({
-      timeout: 20000,
-      idleTime: 500,
-    });
-    */
-
-    await sleep(5000);
-  } catch (e) {
-    log.warn(`Failed to wait for network idle: ${url}`, { error: e });
-  }
+  await sleep(5000);
 };
 
 export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
@@ -44,13 +22,6 @@ export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
   }
 
   await elt.click();
-  // await page.waitForSelector('#logo-icon');
-
-  /*
-  await page.waitForNavigation();
-  await page.waitForNetworkIdle();
-  */
-
   await sleep(5000);
 
   log.debug('Cookies were clicked');
