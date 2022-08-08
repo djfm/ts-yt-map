@@ -107,7 +107,7 @@ async function main() {
     };
 
     try {
-      pg.query('BEGIN');
+      await pg.query('BEGIN');
 
       const from = await saveVideo(data.from);
 
@@ -127,10 +127,11 @@ async function main() {
 
       from.crawled = true;
 
-      pg.query('COMMIT');
+      await pg.query('COMMIT');
     } catch (e) {
       log.error(e);
       res.status(500).send(asError(e).message);
+      return;
     }
 
     res.send({ ok: true });
