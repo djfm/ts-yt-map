@@ -107,8 +107,6 @@ async function main() {
     };
 
     try {
-      await pg.query('BEGIN');
-
       const from = await saveVideo(data.from);
 
       for (const [rank, video] of Object.entries(data.to)) {
@@ -126,8 +124,7 @@ async function main() {
       }
 
       from.crawled = true;
-
-      await pg.query('COMMIT');
+      await saveVideo(from);
     } catch (e) {
       log.error(e);
       res.status(500).send(asError(e).message);
