@@ -6,19 +6,19 @@ export class Recommendation {
   public id: number = -1;
 
   @Column()
-  public from_id: number = -1;
+  public fromId: number = -1;
 
   @Column()
-  public to_id: number = -1;
+  public toId: number = -1;
 
   @Column()
   public rank: number = -1;
 
   @Column()
-  public created_at: Date = new Date();
+  public createdAt: Date = new Date();
 
   @Column()
-  public updated_at: Date = new Date();
+  public updatedAt: Date = new Date();
 }
 
 export default Recommendation;

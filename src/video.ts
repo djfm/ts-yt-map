@@ -3,6 +3,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length } from 'class-validator';
 
 import { log } from './lib';
+import ScrapedChannelData from './channel';
 
 import {
   acceptCookiesIfAny,
@@ -34,9 +35,9 @@ class ScrapedVideoData {
   @Length(1)
   public rawPublishedOn: string = '';
 
-  @Column()
-  @Length(1)
   public channelURL: string = '';
+
+  public channel?: ScrapedChannelData;
 
   public recommendationURLs: string[] = [];
 
@@ -94,6 +95,8 @@ class ScrapedVideoData {
     res.recommendationURLs = (await getElementsAttribute(page, recommendationURLsSelector, 'href')).map(
       (url) => url.replace(/^JSHandle:/, ''),
     );
+
+    res.channel = await ScrapedChannelData.scrape(page, res.channelURL, false);
 
     log.info(`Successfully scraped video data from: ${url}`);
 

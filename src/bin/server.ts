@@ -1,13 +1,14 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
 import { DataSource } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { validate } from 'class-validator';
 
 import { loadConfig, log } from '../lib';
 
-import { Video } from '../video';
+import ScrapedVideoData, { Video } from '../video';
 import { Channel } from '../channel';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendationData } from '../scraper';
@@ -35,12 +36,30 @@ async function main() {
     ...cfg.server.db,
     synchronize: false,
     entities: [Video, Channel, Recommendation],
+    namingStrategy: new SnakeNamingStrategy(),
   });
 
   await ds.initialize();
   const videoRepo = ds.getRepository(Video);
   const channelRepo = ds.getRepository(Channel);
   const recommendationRepo = ds.getRepository(Recommendation);
+
+  const saveVideo = async (video: ScrapedVideoData): Promise<Video> => {
+    const channel = new Channel(video.channel);
+    const channelErrors = await validate(channel);
+    if (channelErrors.length > 0) {
+      throw new Error(`Invalid channel: ${JSON.stringify(channelErrors)}`);
+    }
+    const savedChannel = await channelRepo.save(channel);
+
+    const videoEntity = new Video(video);
+    videoEntity.channelId = savedChannel.id;
+    const videoErrors = await validate(videoEntity);
+    if (videoErrors.length > 0) {
+      throw new Error(`Invalid video: ${JSON.stringify(videoErrors)}`);
+    }
+    return videoRepo.save(videoEntity);
+  };
 
   const app = express();
 
@@ -80,46 +99,41 @@ async function main() {
   app.post('/recommendations', async (req, res) => {
     const data = req.body as ScrapedRecommendationData;
 
-    const channel = new Channel(data.fromChannel);
-    const channelErrors = await validate(channel);
-    if (channelErrors.length > 0) {
-      log.error(`Invalid channel data: ${JSON.stringify(channelErrors)}`);
-      res.status(400).send(channelErrors);
-      return;
-    }
-    const savedChannel = await channelRepo.save(channel);
-
-    const from = new Video(data.from);
-    from.channelId = savedChannel.id;
-    const fromErrors = await validate(from);
-    if (fromErrors.length > 0) {
-      log.error(`Invalid "from" video data: ${JSON.stringify(fromErrors)}`);
-      res.status(400).send(fromErrors);
-      return;
-    }
-    const savedFrom = await videoRepo.save(from);
-
-    for (const [rank, video] of Object.entries(data.to)) {
-      const to = new Video(video);
-      // eslint-disable-next-line no-await-in-loop
-      const toErrors = await validate(to);
-      if (toErrors.length > 0) {
-        log.error(`Invalid "to" video data: ${JSON.stringify(toErrors)}`);
-        res.status(400).send(toErrors);
-        return;
+    const asError = (e: unknown):Error => {
+      if (e instanceof Error) {
+        return e;
       }
-      // eslint-disable-next-line no-await-in-loop
-      const savedTo = await videoRepo.save(to);
+      return new Error('Could not save recommendations.');
+    };
 
-      const recommendation = new Recommendation();
-      recommendation.from_id = savedFrom.id;
-      recommendation.to_id = savedTo.id;
-      recommendation.created_at = new Date();
-      recommendation.updated_at = new Date();
-      recommendation.rank = +rank;
-      // eslint-disable-next-line no-await-in-loop
-      await recommendationRepo.save(recommendation);
+    try {
+      pg.query('BEGIN');
+
+      const from = await saveVideo(data.from);
+
+      for (const [rank, video] of Object.entries(data.to)) {
+        // eslint-disable-next-line no-await-in-loop
+        const to = await saveVideo(video);
+
+        const recommendation = new Recommendation();
+        recommendation.fromId = from.id;
+        recommendation.toId = to.id;
+        recommendation.createdAt = new Date();
+        recommendation.updatedAt = new Date();
+        recommendation.rank = +rank;
+        // eslint-disable-next-line no-await-in-loop
+        await recommendationRepo.save(recommendation);
+      }
+
+      from.crawled = true;
+
+      pg.query('COMMIT');
+    } catch (e) {
+      log.error(e);
+      res.status(500).send(asError(e).message);
     }
+
+    res.send({ ok: true });
   });
 
   app.listen(

@@ -45,7 +45,7 @@ export class ScrapedChannelData {
   @Length(1)
   public htmlLang: string = 'en';
 
-  @Column()
+  @Column({ name: 'type' })
   public channelType: ChannelType = ChannelType.C;
 
   @Column()
@@ -92,6 +92,7 @@ export class ScrapedChannelData {
     }
 
     const res = new ScrapedChannelData();
+    res.url = url;
 
     res.htmlLang = await getAttribute(page, 'html', 'lang');
 
@@ -131,6 +132,12 @@ export class Channel extends ScrapedChannelData {
 
   @Column()
   public subscriberCount: number = -1;
+
+  @Column()
+  public createdAt: Date = new Date();
+
+  @Column()
+  public updatedAt: Date = new Date();
 
   constructor(channel?: ScrapedChannelData) {
     super();

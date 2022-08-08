@@ -39,17 +39,6 @@ export interface ServerConfig {
   seed_video: string,
 }
 
-export const loadConfig = (serverPassword: string): ServerConfig => {
-  const fname = process.env.node_env === 'production' ? 'production.yaml' : 'test.yaml';
-  const configPath = join(__dirname, '..', 'config', fname);
-  const configSource = readFileSync(configPath).toString();
-  const config = parseYAML(configSource);
-  config.server.password = serverPassword;
-
-  // TODO: Validate the config!
-  return config as ServerConfig;
-};
-
 const { colorize, combine, timestamp, label, prettyPrint, json } = format;
 
 const logDir = new Date().toISOString();
@@ -82,3 +71,17 @@ if (process.env.NODE_ENV !== 'production') {
     level: 'debug',
   }));
 }
+
+export const loadConfig = (serverPassword: string): ServerConfig => {
+  const fname = process.env.node_env === 'production' ? 'production.yaml' : 'test.yaml';
+  const configPath = join(__dirname, '..', 'config', fname);
+  const configSource = readFileSync(configPath).toString();
+  const config = parseYAML(configSource);
+  config.server.password = serverPassword;
+
+  log.info(`Loaded config from ${configPath}`);
+  log.info(`Config: \n${JSON.stringify(config, null, 2)}`);
+
+  // TODO: Validate the config!
+  return config as ServerConfig;
+};

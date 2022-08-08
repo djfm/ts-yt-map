@@ -1,6 +1,9 @@
 import { Page, ElementHandle } from 'puppeteer';
 import { log, logRoot } from './lib';
 
+// eslint-disable-next-line no-promise-executor-return
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const navigateTo = async (page: Page, url: string): Promise<void> => {
   log.debug(`Navigating to URL: ${url}`);
   await page.goto(url);
@@ -14,7 +17,7 @@ export const navigateTo = async (page: Page, url: string): Promise<void> => {
     });
     */
 
-    await page.waitForSelector('#logo-icon');
+    // await page.waitForSelector('#logo-icon');
 
     /*
     await page.waitForNetworkIdle({
@@ -22,6 +25,8 @@ export const navigateTo = async (page: Page, url: string): Promise<void> => {
       idleTime: 500,
     });
     */
+
+    await sleep(5000);
   } catch (e) {
     log.warn(`Failed to wait for network idle: ${url}`, { error: e });
   }
@@ -39,8 +44,14 @@ export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
   }
 
   await elt.click();
+  // await page.waitForSelector('#logo-icon');
+
+  /*
   await page.waitForNavigation();
   await page.waitForNetworkIdle();
+  */
+
+  await sleep(5000);
 
   log.debug('Cookies were clicked');
 

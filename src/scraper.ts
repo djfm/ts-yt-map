@@ -1,11 +1,9 @@
 import { loadConfig, log } from './lib';
 import Browser from './browser';
-import ScrapedChannelData from './channel';
 import ScrapedVideoData from './video';
 
 export class ScrapedRecommendationData {
   constructor(
-    public fromChannel: ScrapedChannelData,
     public from: ScrapedVideoData,
     public to: ScrapedVideoData[],
   ) {}
@@ -26,7 +24,6 @@ export class ScrapedRecommendationData {
     const page = await browser.newPage();
 
     const from = await ScrapedVideoData.scrape(page, videoURL, true);
-    const fromChannel = await ScrapedChannelData.scrape(page, from.channelURL, false);
     const to: ScrapedVideoData[] = [];
 
     for (let i = 0; i < from.recommendationURLs.length && i < 10; i += 1) {
@@ -39,7 +36,7 @@ export class ScrapedRecommendationData {
 
     await browser.close();
 
-    return new ScrapedRecommendationData(fromChannel, from, to);
+    return new ScrapedRecommendationData(from, to);
   }
 }
 

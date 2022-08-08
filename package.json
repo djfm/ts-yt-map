@@ -4,7 +4,7 @@
     "test": "jest",
     "browse": "ts-node ./src/bin/test-browser.ts",
     "server": "nodemon ./src/bin/server.ts",
-    "client": "nodemon ./src/bin/client.ts",
+    "client": "ts-node ./src/bin/client.ts",
     "test-docker": "docker-compose up --build --remove-orphans -d && docker run yt-map yarn jest"
   },
   "packageManager": "yarn@3.2.1",
@@ -38,6 +38,7 @@
     "ts-jest": "^28.0.5",
     "ts-node": "^10.8.2",
     "typeorm": "^0.3.7",
+    "typeorm-naming-strategies": "^4.1.0",
     "typescript": "^4.7.4",
     "winston": "^3.8.1",
     "yaml": "^2.1.1"

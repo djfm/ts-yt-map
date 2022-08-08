@@ -14,7 +14,6 @@ services:
       - "5433:5432"
     volumes:
       - yt_graph-test:/var/lib/postgresql/data
-      - ./my-postgres.conf:/etc/postgresql/postgresql-test.conf
   postgres:
     image: postgres
     restart: always
@@ -26,7 +25,6 @@ services:
       - "5432:5432"
     volumes:
       - yt_graph:/var/lib/postgresql/data
-      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
   adminer:
     image: adminer
     restart: always
