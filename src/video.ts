@@ -91,7 +91,7 @@ class ScrapedVideoData {
     res.description = (await getInnerText(page, descriptionSelector)).trimEnd();
     const publishedOnSelector = 'ytd-video-primary-info-renderer #info-text > div:last-child yt-formatted-string';
     res.rawPublishedOn = await getInnerText(page, publishedOnSelector);
-    res.rawViewCount = await getInnerText(page, 'ytd-video-view-count-renderer');
+    res.rawViewCount = await getInnerText(page, 'ytd-video-view-count-renderer span:first-child');
 
     const channelPathSelector = 'ytd-video-owner-renderer yt-formatted-string.ytd-channel-name a';
     res.channelURL = await getAttribute(page, channelPathSelector, 'href');

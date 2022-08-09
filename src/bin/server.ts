@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -9,7 +9,7 @@ import { validate } from 'class-validator';
 import { loadConfig, log } from '../lib';
 
 import ScrapedVideoData, { Video } from '../video';
-import { Channel } from '../channel';
+import { Channel, ScrapedChannelData } from '../channel';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendationData } from '../scraper';
 
@@ -61,6 +61,43 @@ async function main() {
     return videoRepo.save(videoEntity);
   };
 
+  const getChannelId = async (
+    transaction: EntityManager, channel: ScrapedChannelData,
+  ): Promise<number> => {
+    const channelEntity = await transaction.findOneBy(Channel, {
+      url: channel.url,
+    });
+
+    if (channelEntity) {
+      return channelEntity.id;
+    }
+
+    const newChannel = new Channel(channel);
+    const newChannelErrors = await validate(newChannel);
+    if (newChannelErrors.length > 0) {
+      throw new Error(`Invalid channel: ${JSON.stringify(newChannelErrors)}`);
+    }
+    return (await transaction.save(newChannel)).id;
+  };
+
+  const saveVideoWithTransaction = async (
+    transaction: EntityManager, video: ScrapedVideoData,
+  ): Promise<Video> => {
+    if (!video.channel) {
+      throw new Error('Video must have a channel');
+    }
+
+    const channelId = await getChannelId(transaction, video.channel);
+
+    const videoEntity = new Video(video);
+    videoEntity.channelId = channelId;
+    const videoErrors = await validate(videoEntity);
+    if (videoErrors.length > 0) {
+      throw new Error(`Invalid video: ${JSON.stringify(videoErrors)}`);
+    }
+    return transaction.save(videoEntity);
+  };
+
   const app = express();
 
   app.use(bodyParser.json());
@@ -96,15 +133,15 @@ async function main() {
     }
   });
 
-  app.post('/recommendations', async (req, res) => {
-    const data = req.body as ScrapedRecommendationData;
+  const asError = (e: unknown):Error => {
+    if (e instanceof Error) {
+      return e;
+    }
+    return new Error('Could not save recommendations.');
+  };
 
-    const asError = (e: unknown):Error => {
-      if (e instanceof Error) {
-        return e;
-      }
-      return new Error('Could not save recommendations.');
-    };
+  app.post('/recomfffmendations', async (req, res) => {
+    const data = req.body as ScrapedRecommendationData;
 
     try {
       const from = await saveVideo(data.from);
@@ -125,6 +162,39 @@ async function main() {
 
       from.crawled = true;
       await saveVideo(from);
+    } catch (e) {
+      log.error(e);
+      res.status(500).send(asError(e).message);
+      return;
+    }
+
+    res.send({ ok: true });
+  });
+
+  app.post('/recommendation', async (req, res) => {
+    const data = req.body as ScrapedRecommendationData;
+
+    try {
+      await ds.manager.transaction(async (transaction: EntityManager) => {
+        const from = await saveVideoWithTransaction(transaction, data.from);
+
+        for (const [rank, video] of Object.entries(data.to)) {
+          // eslint-disable-next-line no-await-in-loop
+          const to = await saveVideoWithTransaction(transaction, video);
+
+          const recommendation = new Recommendation();
+          recommendation.fromId = from.id;
+          recommendation.toId = to.id;
+          recommendation.createdAt = new Date();
+          recommendation.updatedAt = new Date();
+          recommendation.rank = +rank;
+          // eslint-disable-next-line no-await-in-loop
+          await transaction.save(recommendation);
+        }
+
+        from.crawled = true;
+        await transaction.save(from);
+      });
     } catch (e) {
       log.error(e);
       res.status(500).send(asError(e).message);

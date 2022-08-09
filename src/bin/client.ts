@@ -30,7 +30,7 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
   if (urlResp.ok) {
     const u = await urlResp.json();
     const scraped = await ScrapedRecommendationData.scrapeRecommendations(u.url);
-    await fetch(`${server}/recommendations`, {
+    await fetch(`${server}/recommendation`, {
       method: 'POST',
       headers: {
         'X-Password': password,
