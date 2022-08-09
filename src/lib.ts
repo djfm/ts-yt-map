@@ -73,7 +73,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export const loadConfig = (serverPassword: string): ServerConfig => {
-  const fname = process.env.node_env === 'production' ? 'production.yaml' : 'test.yaml';
+  const fname = process.env.NODE_ENV === 'production' ? 'production.yaml' : 'test.yaml';
   const configPath = join(__dirname, '..', 'config', fname);
   const configSource = readFileSync(configPath).toString();
   const config = parseYAML(configSource);
