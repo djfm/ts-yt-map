@@ -135,6 +135,12 @@ export class Video extends ScrapedVideoData {
   @Column()
   public viewCount: number = -1;
 
+  @Column()
+  public createdAt: Date = new Date();
+
+  @Column()
+  public updatedAt: Date = new Date();
+
   constructor(video?: ScrapedVideoData) {
     super();
     if (video) {
