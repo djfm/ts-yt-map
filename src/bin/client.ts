@@ -51,11 +51,15 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
 
 const main = async () => {
   try {
+    process.on('unhandledRejection', (error) => {
+      throw error;
+    });
     for (;;) {
       // eslint-disable-next-line no-await-in-loop
       await scrapeOneVideoAndItsRecommendations();
     }
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.log(e);
     // ignore
     await sleep(1000);
