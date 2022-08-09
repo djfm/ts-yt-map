@@ -43,4 +43,16 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
   }
 };
 
-scrapeOneVideoAndItsRecommendations();
+const main = async () => {
+  try {
+    for (;;) {
+      // eslint-disable-next-line no-await-in-loop
+      await scrapeOneVideoAndItsRecommendations();
+    }
+  } catch (e) {
+    console.log(e);
+    // ignore
+  }
+};
+
+main();
