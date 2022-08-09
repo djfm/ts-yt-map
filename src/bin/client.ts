@@ -1,6 +1,5 @@
 import fetch from 'node-fetch';
 import ScrapedRecommendationData from '../scraper';
-import { loadConfig } from '../lib';
 
 const server = process.argv[2];
 const password = process.argv[3];
@@ -24,8 +23,6 @@ if (typeof password !== 'string') {
 }
 
 const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
-  const cfg = loadConfig(password);
-
   const urlResp = await fetch(`${server}/video/get-url-to-crawl`, {
     method: 'POST',
     headers: {
