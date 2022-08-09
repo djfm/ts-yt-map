@@ -5,6 +5,12 @@ import { loadConfig } from '../lib';
 const server = process.argv[2];
 const password = process.argv[3];
 
+// eslint-disable-next-line arrow-body-style
+const sleep = (ms: number) => new Promise((resolve) => {
+  // eslint-disable-next-line no-promise-executor-return
+  return setTimeout(resolve, ms);
+});
+
 if (typeof server !== 'string') {
   // eslint-disable-next-line no-console
   console.error('Usage: ts-node client.js <server> <password>');
@@ -52,6 +58,7 @@ const main = async () => {
   } catch (e) {
     console.log(e);
     // ignore
+    await sleep(1000);
   }
 };
 
