@@ -35,6 +35,10 @@ class ScrapedVideoData {
   @Length(1)
   public rawPublishedOn: string = '';
 
+  @Column()
+  @Length(1)
+  public rawViewCount: string = '';
+
   public channelURL: string = '';
 
   public channel?: ScrapedChannelData;
@@ -87,6 +91,7 @@ class ScrapedVideoData {
     res.description = (await getInnerText(page, descriptionSelector)).trimEnd();
     const publishedOnSelector = 'ytd-video-primary-info-renderer #info-text > div:last-child yt-formatted-string';
     res.rawPublishedOn = await getInnerText(page, publishedOnSelector);
+    res.rawViewCount = await getInnerText(page, 'ytd-video-view-count-renderer');
 
     const channelPathSelector = 'ytd-video-owner-renderer yt-formatted-string.ytd-channel-name a';
     res.channelURL = await getAttribute(page, channelPathSelector, 'href');
@@ -126,6 +131,9 @@ export class Video extends ScrapedVideoData {
 
   @Column()
   public channelId: number = -1;
+
+  @Column()
+  public viewCount: number = -1;
 
   constructor(video?: ScrapedVideoData) {
     super();

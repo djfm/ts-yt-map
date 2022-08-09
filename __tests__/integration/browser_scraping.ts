@@ -27,6 +27,7 @@ describe('Basic browser scraping tests', () => {
     expect(video.channelURL).toBe('https://www.youtube.com/c/FrançoisMariedeJouvencel');
     expect(video.title).toBe('Drone over Quiet Lake in the Morning');
     expect(+video.rawLikeCount).toBeGreaterThanOrEqual(1);
+    expect(+video.rawViewCount.split(' ')[0]).toBeGreaterThanOrEqual(1);
     expect(video.description).toBe('Another Bebop2 footage from a while ago.');
     expect(video.recommendationURLs.length).toBeGreaterThanOrEqual(10);
 
