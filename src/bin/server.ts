@@ -41,25 +41,6 @@ async function main() {
 
   await ds.initialize();
   const videoRepo = ds.getRepository(Video);
-  const channelRepo = ds.getRepository(Channel);
-  const recommendationRepo = ds.getRepository(Recommendation);
-
-  const saveVideo = async (video: ScrapedVideoData): Promise<Video> => {
-    const channel = new Channel(video.channel);
-    const channelErrors = await validate(channel);
-    if (channelErrors.length > 0) {
-      throw new Error(`Invalid channel: ${JSON.stringify(channelErrors)}`);
-    }
-    const savedChannel = await channelRepo.save(channel);
-
-    const videoEntity = new Video(video);
-    videoEntity.channelId = savedChannel.id;
-    const videoErrors = await validate(videoEntity);
-    if (videoErrors.length > 0) {
-      throw new Error(`Invalid video: ${JSON.stringify(videoErrors)}`);
-    }
-    return videoRepo.save(videoEntity);
-  };
 
   const getChannelId = async (
     transaction: EntityManager, channel: ScrapedChannelData,
@@ -85,6 +66,14 @@ async function main() {
   ): Promise<Video> => {
     if (!video.channel) {
       throw new Error('Video must have a channel');
+    }
+
+    const existingVideo = await transaction.findOneBy(Video, {
+      url: video.url,
+    });
+
+    if (existingVideo) {
+      return existingVideo;
     }
 
     const channelId = await getChannelId(transaction, video.channel);

@@ -59,6 +59,7 @@ const main = async () => {
     console.log(e);
     // ignore
     await sleep(1000);
+    main();
   }
 };
 
