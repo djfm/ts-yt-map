@@ -4,6 +4,7 @@ import { Length } from 'class-validator';
 
 import { log } from './lib';
 import ScrapedChannelData from './channel';
+import { convertNumber } from './util';
 
 import {
   acceptCookiesIfAny,
@@ -148,6 +149,10 @@ export class Video extends ScrapedVideoData {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this as any)[k] = v;
       }
+
+      this.likeCount = convertNumber(this.rawLikeCount);
+      this.viewCount = convertNumber(this.rawViewCount.split(' ')[0]);
+      this.publishedOn = new Date(this.rawPublishedOn);
     }
   }
 }

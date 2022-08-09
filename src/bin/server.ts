@@ -129,7 +129,7 @@ async function main() {
         res.send({ url: null });
       }
     } else {
-      // TODO
+      res.send({ url: v[0][0].url });
     }
   });
 
@@ -139,37 +139,6 @@ async function main() {
     }
     return new Error('Could not save recommendations.');
   };
-
-  app.post('/recomfffmendations', async (req, res) => {
-    const data = req.body as ScrapedRecommendationData;
-
-    try {
-      const from = await saveVideo(data.from);
-
-      for (const [rank, video] of Object.entries(data.to)) {
-        // eslint-disable-next-line no-await-in-loop
-        const to = await saveVideo(video);
-
-        const recommendation = new Recommendation();
-        recommendation.fromId = from.id;
-        recommendation.toId = to.id;
-        recommendation.createdAt = new Date();
-        recommendation.updatedAt = new Date();
-        recommendation.rank = +rank;
-        // eslint-disable-next-line no-await-in-loop
-        await recommendationRepo.save(recommendation);
-      }
-
-      from.crawled = true;
-      await saveVideo(from);
-    } catch (e) {
-      log.error(e);
-      res.status(500).send(asError(e).message);
-      return;
-    }
-
-    res.send({ ok: true });
-  });
 
   app.post('/recommendation', async (req, res) => {
     const data = req.body as ScrapedRecommendationData;

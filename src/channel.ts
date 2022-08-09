@@ -4,6 +4,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length } from 'class-validator';
 
 import { log } from './lib';
+import { convertNumber } from './util';
 
 import {
   acceptCookiesIfAny,
@@ -146,6 +147,8 @@ export class Channel extends ScrapedChannelData {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this as any)[k] = v;
       }
+
+      this.subscriberCount = convertNumber(this.rawSubscriberCount.split(' ')[0]);
     }
   }
 }
