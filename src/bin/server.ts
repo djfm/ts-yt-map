@@ -108,8 +108,6 @@ async function main() {
       RETURNING url
     `);
 
-    console.log(v);
-
     if (v[1] === 0) {
       if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10) {
         seedVideoSentAt = new Date();
