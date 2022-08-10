@@ -104,7 +104,7 @@ async function main() {
   app.post('/video/get-url-to-crawl', async (req, res) => {
     const v = await videoRepo.query(`
       UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
-      WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval OR latest_crawl_attempted_at IS NULL)) AND crawl_attempt_count < 3
+      WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval OR latest_crawl_attempted_at IS NULL)) AND crawl_attempt_count < 3 AND crawled = false
       RETURNING url
     `);
 
