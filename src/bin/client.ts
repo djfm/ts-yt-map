@@ -50,7 +50,10 @@ const main = async () => {
   try {
     process.on('unhandledRejection', (error) => {
       throw error;
+    }).on('uncaughtException', (error) => {
+      throw error;
     });
+
     for (;;) {
       // eslint-disable-next-line no-await-in-loop
       await scrapeOneVideoAndItsRecommendations();
