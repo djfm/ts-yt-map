@@ -109,7 +109,7 @@ async function main() {
     `);
 
     if (v[1] === 0) {
-      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10) {
+      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10) {
         seedVideoSentAt = new Date();
         res.send({ url: cfg.seed_video });
       } else {
