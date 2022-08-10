@@ -17,7 +17,8 @@ import {
 export enum ChannelType {
   C = '/c/',
   Channel = '/channel/',
-  User = '/user/'
+  User = '/user/',
+  Raw = '/',
 }
 
 const asChannelType = (s: string): ChannelType => {
@@ -33,7 +34,7 @@ const asChannelType = (s: string): ChannelType => {
     return ChannelType.User;
   }
 
-  throw new Error(`Unknown channel type ${s}`);
+  return ChannelType.Raw;
 };
 
 @Entity()
@@ -98,12 +99,14 @@ export class ScrapedChannelData {
     res.htmlLang = await getAttribute(page, 'html', 'lang');
 
     const urlSegments = url.split(/\/+/);
-    if (urlSegments.length !== 4) {
-      log.error(`Invalid channel URL: ${url}`, { urlSegments });
-      throw new Error('Unexpected URL format in channel URL.');
+    if (urlSegments.length === 4) {
+      res.shortName = decodeURIComponent(urlSegments[3]);
+    } else if (urlSegments.length === 3) {
+      res.shortName = decodeURIComponent(urlSegments[2]);
+    } else {
+      throw new Error(`Invalid channel URL: ${url}`);
     }
 
-    res.shortName = decodeURIComponent(urlSegments[3]);
     res.humanName = await getInnerText(page, '#channel-name yt-formatted-string');
     res.rawSubscriberCount = await getInnerText(page, '#subscriber-count');
 
