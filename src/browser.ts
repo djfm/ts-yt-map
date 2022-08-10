@@ -79,14 +79,6 @@ export class Browser {
 
     const browser = new Browser(puppeteerBrowser);
 
-    process.on('exit', async () => {
-      await browser.close();
-    }).on('unhandledRejection', async () => {
-      await browser.close();
-    }).on('uncaughtException', async () => {
-      await browser.close();
-    });
-
     return browser;
   }
 

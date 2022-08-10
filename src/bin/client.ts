@@ -46,13 +46,17 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
   }
 };
 
+const throwError = (error: Error) => {
+  throw error;
+};
+
 const main = async () => {
   try {
-    process.on('unhandledRejection', (error) => {
-      throw error;
-    }).on('uncaughtException', (error) => {
-      throw error;
-    });
+    process
+      .off('unhandledRejection', throwError)
+      .off('uncaughtException', throwError)
+      .on('unhandledRejection', throwError)
+      .on('uncaughtException', throwError);
 
     for (;;) {
       // eslint-disable-next-line no-await-in-loop

@@ -23,20 +23,21 @@ export class ScrapedRecommendationData {
     const browser = await Browser.launch(cfg.chrome);
     const page = await browser.newPage();
 
-    const from = await ScrapedVideoData.scrape(page, videoURL, true);
-    const to: ScrapedVideoData[] = [];
+    try {
+      const from = await ScrapedVideoData.scrape(page, videoURL, true);
+      const to: ScrapedVideoData[] = [];
 
-    for (let i = 0; i < from.recommendationURLs.length && i < 10; i += 1) {
-      log.info(`Scraping recommendation ${i + 1} of ${Math.min(from.recommendationURLs.length, 10)}...`);
-      const url = from.recommendationURLs[i];
-      // eslint-disable-next-line no-await-in-loop
-      const video = await ScrapedVideoData.scrape(page, url, false);
-      to.push(video);
+      for (let i = 0; i < from.recommendationURLs.length && i < 10; i += 1) {
+        log.info(`Scraping recommendation ${i + 1} of ${Math.min(from.recommendationURLs.length, 10)}...`);
+        const url = from.recommendationURLs[i];
+        // eslint-disable-next-line no-await-in-loop
+        const video = await ScrapedVideoData.scrape(page, url, false);
+        to.push(video);
+      }
+      return new ScrapedRecommendationData(from, to);
+    } finally {
+      await browser.close();
     }
-
-    await browser.close();
-
-    return new ScrapedRecommendationData(from, to);
   }
 }
 
