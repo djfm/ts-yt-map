@@ -1,4 +1,3 @@
-import URL from 'url';
 import { Page, Browser as PuppeteerBrowser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -11,43 +10,6 @@ export interface ChromeConfig {
   viewport_width: undefined | number;
   viewport_height: undefined | number;
 }
-
-// This is experimental and not used as of now,
-// because it makes scraping channels fail.
-export const blockUselessRequests = async (page: Page): Promise<void> => {
-  await page.setRequestInterception(true);
-
-  page.on('request', (request) => {
-    if (request.url().startsWith('https://www.youtube.com/api/')) {
-      request.abort();
-      return;
-    }
-
-    if (request.url().endsWith('/ad_status.js')) {
-      request.abort();
-      return;
-    }
-
-    if (request.method() === 'POST') {
-      if (request.url() === 'https://www.youtube.com/upgrade_visitor_cookie?eom=1') {
-        request.continue();
-        return;
-      }
-
-      request.abort();
-      return;
-    }
-
-    const u = URL.parse(request.url());
-
-    if (u.hostname !== 'www.youtube.com' && u.hostname !== 'consent.youtube.com') {
-      request.abort();
-      return;
-    }
-
-    request.continue();
-  });
-};
 
 export class Browser {
   constructor(private browser: PuppeteerBrowser) {

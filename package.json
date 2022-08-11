@@ -3,7 +3,6 @@
   "scripts": {
     "test": "jest",
     "test-unit": "jest __tests__/unit",
-    "browse": "ts-node ./src/bin/test-browser.ts",
     "server": "nodemon ./src/bin/server.ts",
     "client": "ts-node ./src/bin/client.ts",
     "test-docker": "docker-compose up --build --remove-orphans -d && docker run yt-map yarn jest"
