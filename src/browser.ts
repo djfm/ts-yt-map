@@ -92,6 +92,13 @@ export class Browser {
     page.setDefaultTimeout(30000);
 
     // await blockUselessRequests(page);
+    page.on('error', (err) => {
+      throw err;
+    });
+
+    page.on('pageerror', (err) => {
+      throw err;
+    });
 
     return page;
   }
