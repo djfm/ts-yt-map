@@ -46,28 +46,17 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
   }
 };
 
-const throwError = (error: Error) => {
-  throw error;
-};
-
 const main = async () => {
-  try {
-    process
-      .off('unhandledRejection', throwError)
-      .off('uncaughtException', throwError)
-      .on('unhandledRejection', throwError)
-      .on('uncaughtException', throwError);
-
-    for (;;) {
+  for (;;) {
+    try {
       // eslint-disable-next-line no-await-in-loop
       await scrapeOneVideoAndItsRecommendations();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(1000);
     }
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log(e);
-    // ignore
-    await sleep(1000);
-    main();
   }
 };
 
