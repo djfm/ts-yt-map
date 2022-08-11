@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import ScrapedRecommendationData from '../scraper';
 import { sleep } from '../util';
 

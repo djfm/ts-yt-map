@@ -1,8 +1,10 @@
 import { join } from 'path';
-import { mkdirSync, readFileSync } from 'fs';
+import { mkdirSync } from 'fs';
+import { readFile } from 'fs/promises';
 
 import { parse as parseYAML } from 'yaml';
 import winston, { format } from 'winston';
+import { validate, Length, Min, Max } from 'class-validator';
 import { ChromeConfig } from './browser';
 
 export {
@@ -23,20 +25,40 @@ export {
  *  };
  */
 
-export interface ServerConfig {
-  chrome: ChromeConfig,
-  server: {
-    password: string,
-    port: number,
-    db: {
-      host: string,
-      port: number,
-      username: string,
-      password: string,
-      database: string,
-    }
-  },
-  seed_video: string,
+class DbConfig {
+  @Length(1, 255)
+  public host = '';
+
+  @Min(1)
+  @Max(65535)
+  public port = 0;
+
+  @Length(1, 255)
+  public username = '';
+
+  @Length(1, 255)
+  public password = '';
+
+  @Length(1, 255)
+  public database = '';
+}
+
+export class ServerConfig {
+  @Length(1, 255)
+  public password: string = '';
+
+  @Min(1)
+  @Max(65535)
+  public port = 0;
+
+  public db = new DbConfig();
+
+  @Length(1, 255)
+  public seed_video = '';
+
+  constructor(config: Record<string, unknown>) {
+    Object.assign(this, config);
+  }
 }
 
 const { colorize, combine, timestamp, label, prettyPrint, json } = format;
@@ -72,13 +94,20 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-export const loadConfig = (serverPassword: string): ServerConfig => {
+export const loadChromeConfig = async (): Promise<ChromeConfig> => {
+  const configPath = join(__dirname, '..', 'config', 'chrome.yaml');
+  const config = parseYAML(await readFile(configPath, 'utf8'));
+  const chromeConfig = new ChromeConfig(config);
+  await validate(chromeConfig);
+  return chromeConfig;
+};
+
+export const loadServerConfig = async (serverPassword: string): Promise<ServerConfig> => {
   const fname = process.env.NODE_ENV === 'production' ? 'production.yaml' : 'test.yaml';
   const configPath = join(__dirname, '..', 'config', fname);
-  const configSource = readFileSync(configPath).toString();
-  const config = parseYAML(configSource);
-  config.server.password = serverPassword;
+  const config = parseYAML(await readFile(configPath, 'utf8'));
+  config.password = serverPassword;
+  const serverConfig = new ServerConfig(config);
 
-  // TODO: Validate the config!
-  return config as ServerConfig;
+  return serverConfig;
 };

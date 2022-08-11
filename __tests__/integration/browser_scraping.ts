@@ -1,7 +1,7 @@
 import { Page } from 'puppeteer';
 
 import Browser from '../../src/browser';
-import { loadConfig } from '../../src/lib';
+import { loadChromeConfig } from '../../src/lib';
 import ScrapedVideoData from '../../src/video';
 import ScrapedChannelData, { ChannelType } from '../../src/channel';
 
@@ -11,8 +11,8 @@ let browser: Browser;
 let page: Page;
 
 beforeEach(async () => {
-  const cfg = loadConfig('');
-  browser = await Browser.launch(cfg.chrome);
+  const cfg = await loadChromeConfig();
+  browser = await Browser.launch(cfg);
   page = await browser.newPage();
 });
 

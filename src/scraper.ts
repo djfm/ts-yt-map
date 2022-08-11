@@ -1,4 +1,4 @@
-import { loadConfig, log } from './lib';
+import { loadChromeConfig, log } from './lib';
 import Browser from './browser';
 import ScrapedVideoData from './video';
 import ScrapedChannelData from './channel';
@@ -20,8 +20,8 @@ export class ScrapedRecommendationData {
 
   static async try_scrapeRecommendations(videoURL: string): Promise<ScrapedRecommendationData> {
     log.info(`Scraping recommendations from URL: ${videoURL}`);
-    const cfg = loadConfig('');
-    const browser = await Browser.launch(cfg.chrome);
+    const cfg = await loadChromeConfig();
+    const browser = await Browser.launch(cfg);
 
     try {
       const page = await browser.newPage();

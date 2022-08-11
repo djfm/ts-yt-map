@@ -4,11 +4,14 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 puppeteer.use(StealthPlugin());
 
-export interface ChromeConfig {
-  headless: boolean;
-  proxy_uri: string | false;
-  viewport_width: undefined | number;
-  viewport_height: undefined | number;
+export class ChromeConfig {
+  headless: boolean = true;
+
+  proxy_uri: string | false = false;
+
+  constructor(data: Record<string, unknown>) {
+    Object.assign(this, data);
+  }
 }
 
 export class Browser {
@@ -29,8 +32,8 @@ export class Browser {
     }
 
     const defaultViewport = {
-      width: cfg.viewport_width ?? 1980 + Math.round(Math.random() * 100),
-      height: cfg.viewport_height ?? 1980 + Math.round(Math.random() * 100),
+      width: 1980 + Math.round(Math.random() * 100),
+      height: 1980 + Math.round(Math.random() * 100),
     };
 
     const puppeteerBrowser = await puppeteer.launch({
