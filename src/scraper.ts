@@ -1,6 +1,7 @@
 import { loadConfig, log } from './lib';
 import Browser from './browser';
 import ScrapedVideoData from './video';
+import ScrapedChannelData from './channel';
 
 export class ScrapedRecommendationData {
   constructor(
@@ -27,11 +28,16 @@ export class ScrapedRecommendationData {
       const from = await ScrapedVideoData.scrape(page, videoURL, true);
       const to: ScrapedVideoData[] = [];
 
+      const channelCache = new Map<string, ScrapedChannelData>();
+
       for (let i = 0; i < from.recommendationURLs.length && i < 10; i += 1) {
         log.info(`Scraping recommendation ${i + 1} of ${Math.min(from.recommendationURLs.length, 10)}...`);
         const url = from.recommendationURLs[i];
         // eslint-disable-next-line no-await-in-loop
-        const video = await ScrapedVideoData.scrape(page, url, false);
+        const video = await ScrapedVideoData.scrape(page, url, false, 1, 3, channelCache);
+        if (video.channel) {
+          channelCache.set(video.channelURL, video.channel);
+        }
         to.push(video);
       }
       return new ScrapedRecommendationData(from, to);

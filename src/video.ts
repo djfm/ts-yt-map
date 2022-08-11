@@ -49,15 +49,18 @@ class ScrapedVideoData {
   public static async scrape(
     page: Page, url: string, acceptCookies = true,
     attemptNumber = 1, maxAttempts = 3,
+    channelCache = new Map<string, ScrapedChannelData>(),
   ): Promise<ScrapedVideoData> {
     log.info(`Scraping video URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}...`);
 
     try {
-      return await ScrapedVideoData.try_scrape(page, url, acceptCookies);
+      return await ScrapedVideoData.try_scrape(page, url, acceptCookies, channelCache);
     } catch (e) {
       if (attemptNumber <= maxAttempts) {
         log.info(`Failed to scrape video URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
-        return ScrapedVideoData.scrape(page, url, acceptCookies, attemptNumber + 1, maxAttempts);
+        return ScrapedVideoData.scrape(
+          page, url, acceptCookies, attemptNumber + 1, maxAttempts, channelCache,
+        );
       }
 
       log.error(`Failed to scrape video URL: ${url}`, { error: e });
@@ -68,6 +71,7 @@ class ScrapedVideoData {
 
   static async try_scrape(
     page: Page, url: string, acceptCookies: boolean,
+    channelCache: Map<string, ScrapedChannelData>,
   ): Promise<ScrapedVideoData> {
     const res = new ScrapedVideoData();
     res.url = url;
@@ -108,7 +112,15 @@ class ScrapedVideoData {
       (url) => url.replace(/^JSHandle:/, ''),
     );
 
-    res.channel = await ScrapedChannelData.scrape(page, res.channelURL, false);
+    // often a video recommends videos from the same channel,
+    // no need to scrape them more than once
+    if (channelCache.has(res.channelURL)) {
+      log.info(`Found channel in cache: ${res.channelURL}`);
+      res.channel = channelCache.get(res.channelURL);
+    } else {
+      log.info(`Scraping channel for video: ${res.channelURL}`);
+      res.channel = await ScrapedChannelData.scrape(page, res.channelURL, false);
+    }
 
     log.info(`Successfully scraped video data from: ${url}`);
 
