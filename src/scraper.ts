@@ -21,9 +21,9 @@ export class ScrapedRecommendationData {
     log.info(`Scraping recommendations from URL: ${videoURL}`);
     const cfg = loadConfig('');
     const browser = await Browser.launch(cfg.chrome);
-    const page = await browser.newPage();
 
     try {
+      const page = await browser.newPage();
       const from = await ScrapedVideoData.scrape(page, videoURL, true);
       const to: ScrapedVideoData[] = [];
 
