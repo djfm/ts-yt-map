@@ -5,7 +5,7 @@ import { loadConfig } from '../../src/lib';
 import ScrapedVideoData from '../../src/video';
 import ScrapedChannelData, { ChannelType } from '../../src/channel';
 
-jest.setTimeout(60000);
+jest.setTimeout(600000);
 
 let browser: Browser;
 let page: Page;
@@ -17,6 +17,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  await page.close();
   await browser.close();
 });
 

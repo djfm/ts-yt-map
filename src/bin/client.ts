@@ -1,14 +1,9 @@
 import fetch from 'node-fetch';
 import ScrapedRecommendationData from '../scraper';
+import { sleep } from '../util';
 
 const server = process.argv[2];
 const password = process.argv[3];
-
-// eslint-disable-next-line arrow-body-style
-const sleep = (ms: number) => new Promise((resolve) => {
-  // eslint-disable-next-line no-promise-executor-return
-  return setTimeout(resolve, ms);
-});
 
 if (typeof server !== 'string') {
   // eslint-disable-next-line no-console

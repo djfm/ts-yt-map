@@ -48,12 +48,18 @@ class ScrapedVideoData {
 
   public static async scrape(
     page: Page, url: string, acceptCookies = true,
+    attemptNumber = 1, maxAttempts = 3,
   ): Promise<ScrapedVideoData> {
-    log.info(`Scraping video URL: ${url}`);
+    log.info(`Scraping video URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}...`);
 
     try {
       return await ScrapedVideoData.try_scrape(page, url, acceptCookies);
     } catch (e) {
+      if (attemptNumber <= maxAttempts) {
+        log.info(`Failed to scrape video URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
+        return ScrapedVideoData.scrape(page, url, acceptCookies, attemptNumber + 1, maxAttempts);
+      }
+
       log.error(`Failed to scrape video URL: ${url}`, { error: e });
       await takeScreenshot(page, 'video_scrape_failure');
       throw e;

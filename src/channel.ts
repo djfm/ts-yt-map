@@ -72,12 +72,18 @@ export class ScrapedChannelData {
 
   public static async scrape(
     page: Page, url: string, acceptCookies = true,
+    attemptNumber = 1, maxAttempts = 3,
   ): Promise<ScrapedChannelData> {
-    log.info(`Scraping channel URL: ${url}`);
+    log.info(`Scraping channel URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}...`);
 
     try {
       return await ScrapedChannelData.try_scrape(page, url, acceptCookies);
     } catch (e) {
+      if (attemptNumber <= maxAttempts) {
+        log.info(`Failed to scrape channel URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
+        return ScrapedChannelData.scrape(page, url, acceptCookies, attemptNumber + 1, maxAttempts);
+      }
+
       log.error(`Failed to scrape channel URL: ${url}`, { error: e });
       await takeScreenshot(page, 'channel_scrape_failure');
       throw e;
@@ -118,7 +124,7 @@ export class ScrapedChannelData {
 
     res.youtubeId = youtubeId;
 
-    navigateTo(page, `${url}/about`);
+    await navigateTo(page, `${url}/about`);
     res.description = await getInnerText(page, '#left-column #description');
 
     res.channelType = asChannelType(urlSegments[2]);

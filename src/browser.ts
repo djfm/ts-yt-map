@@ -90,16 +90,6 @@ export class Browser {
     const page = await this.browser.newPage();
     page.setDefaultNavigationTimeout(60000);
     page.setDefaultTimeout(30000);
-
-    // await blockUselessRequests(page);
-    page.on('error', (err) => {
-      throw err;
-    });
-
-    page.on('pageerror', (err) => {
-      throw err;
-    });
-
     return page;
   }
 }

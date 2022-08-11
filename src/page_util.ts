@@ -1,8 +1,6 @@
 import { Page, ElementHandle } from 'puppeteer';
 import { log, logRoot } from './lib';
-
-// eslint-disable-next-line no-promise-executor-return
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+import { sleep } from './util';
 
 export const navigateTo = async (page: Page, url: string): Promise<void> => {
   log.debug(`Navigating to URL: ${url}`);

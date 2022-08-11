@@ -1,6 +1,6 @@
 import ScrapedRecommendationData from '../../src/scraper';
 
-jest.setTimeout(300000);
+jest.setTimeout(600000);
 
 describe('Scraping a bunch of recommendations', () => {
   it('should scrape one video and its recommendations', async () => {

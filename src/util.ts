@@ -12,3 +12,6 @@ export const convertNumber = (str: string): number => {
 
   return +expanded;
 };
+
+export const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => { setTimeout(resolve, ms); });
