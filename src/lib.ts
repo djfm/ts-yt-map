@@ -79,9 +79,6 @@ export const loadConfig = (serverPassword: string): ServerConfig => {
   const config = parseYAML(configSource);
   config.server.password = serverPassword;
 
-  log.info(`Loaded config from ${configPath}`);
-  log.info(`Config: \n${JSON.stringify(config, null, 2)}`);
-
   // TODO: Validate the config!
   return config as ServerConfig;
 };
