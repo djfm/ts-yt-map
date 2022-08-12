@@ -101,14 +101,14 @@ export const startServer = async (
 
   app.use(bodyParser.json());
   app.use((req, res, next) => {
-    log.info('Authorizing request...');
+    log.debug('Authorizing request...');
 
     if (req.headers['x-password'] !== cfg.password) {
       log.error('Invalid password');
       res.status(401).send('Unauthorized');
       return;
     }
-    log.info('Authorized');
+    log.debug('Authorized');
 
     next();
   });
