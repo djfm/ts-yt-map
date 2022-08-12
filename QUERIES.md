@@ -27,3 +27,16 @@ num_from	num_to
 ```
 
 Does it mean the recommendations form a circle?
+
+## Sanity checks
+
+Do all crawled videos have 10 recommendations?
+----------------------------------------------
+
+```sql
+select from_id, count(to_id)
+from recommendation
+group by from_id
+having count(to_id) > 10
+LIMIT 50
+```
