@@ -103,8 +103,6 @@ export const startServer = async (
   app.use((req, res, next) => {
     log.debug('Authorizing request...');
 
-    log.debug(req.headers);
-
     if (req.headers['x-password'] !== cfg.password) {
       log.error('Invalid password');
       res.status(401).send('Unauthorized');
