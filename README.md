@@ -91,7 +91,7 @@ just run:
 If you wanna contribute your resources to our server feel free to spawn a client with:
 
 ```bash
-./client https://yt.fmdj.fr tralala 8
+./client https://yt.fmdj.fr <password> 8
 ```
 
 I will work on providing a read-only access to the database for those interested.
