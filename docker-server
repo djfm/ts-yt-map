@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+yarn pm2 start src/bin/server.ts -- "$password"
+
+yarn pm2 logs

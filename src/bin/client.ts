@@ -20,8 +20,11 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
   const urlResp = await fetch(`${server}/video/get-url-to-crawl`, {
     method: 'POST',
     headers: {
-      'X-Password': password,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      password,
+    }),
   });
 
   if (urlResp.ok) {
@@ -30,10 +33,12 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
     await fetch(`${server}/recommendation`, {
       method: 'POST',
       headers: {
-        'X-Password': password,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(scraped),
+      body: JSON.stringify({
+        password,
+        payload: scraped,
+      }),
     });
   } else {
     throw new Error('Failed to get URL to crawl');

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+password=$1
+
+if [ -z "$password" ]; then
+    echo "Usage: $0 <password>"
+    exit 1
+fi
+
+docker compose up --build -d
+docker compose run --service-ports -e NODE_ENV=production-docker app bash docker-server
