@@ -8,4 +8,4 @@ jobs:
         - name: Check out the repo
           uses: actions/checkout@v3
         - name: Run the tests with Docker
-          run: docker compose up --build --remove-orphans -d && docker compose run --rm -e NODE_ENV=test-docker -e LOG=show app yarn test
+          run: bash test-docker
