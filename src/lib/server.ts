@@ -11,13 +11,15 @@ import ScrapedVideoData, { Video } from '../video';
 import { Channel, ScrapedChannelData } from '../channel';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendationData } from '../scraper';
-import { ServerConfig } from '../lib';
+import { ServerConfig, LoggerInterface } from '../lib';
 
 export interface ServerHandle {
   close: () => Promise<void>,
 }
 
-export const startServer = async (cfg: ServerConfig, log: Logger): Promise<ServerHandle> => {
+export const startServer = async (
+  cfg: ServerConfig, log: LoggerInterface,
+): Promise<ServerHandle> => {
   let countingRecommendationsSince = Date.now();
   let recommendationsSaved = 0;
 

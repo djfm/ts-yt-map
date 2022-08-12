@@ -1,11 +1,11 @@
-import { loadServerConfig, ServerConfig, log } from '../../src/lib';
+import { loadServerConfig, ServerConfig } from '../../src/lib';
 import { startServer, ServerHandle } from '../../src/lib/server';
+import { MockLogger } from '../../src/util';
 
 const password = 'secret';
 let cfg: ServerConfig;
 let server: ServerHandle;
-
-jest.setTimeout(600000);
+const log = new MockLogger();
 
 beforeAll(async () => {
   cfg = await loadServerConfig(password);

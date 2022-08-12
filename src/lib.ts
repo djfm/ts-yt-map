@@ -11,6 +11,18 @@ export {
   Browser,
 } from './browser';
 
+export interface LogMethod {
+  (message: string, ...meta: unknown[]): unknown;
+  (message: unknown): unknown;
+  (infoObject: object): unknown;
+}
+
+export interface LoggerInterface {
+  error: LogMethod;
+  info: LogMethod;
+  close: () => void;
+}
+
 /**
  * Available log levels.
  *
