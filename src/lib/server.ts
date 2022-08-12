@@ -147,22 +147,14 @@ export const startServer = async (cfg: ServerConfig, log: Logger): Promise<Serve
           // eslint-disable-next-line no-await-in-loop
           const to = await saveVideoWithTransaction(transaction, video);
 
+          const recommendation = new Recommendation();
+          recommendation.fromId = from.id;
+          recommendation.toId = to.id;
+          recommendation.createdAt = new Date();
+          recommendation.updatedAt = new Date();
+          recommendation.rank = +rank;
           // eslint-disable-next-line no-await-in-loop
-          const reco = await transaction.findOneBy(Recommendation, {
-            fromId: from.id,
-            toId: to.id,
-          });
-
-          if (!reco) {
-            const recommendation = new Recommendation();
-            recommendation.fromId = from.id;
-            recommendation.toId = to.id;
-            recommendation.createdAt = new Date();
-            recommendation.updatedAt = new Date();
-            recommendation.rank = +rank;
-            // eslint-disable-next-line no-await-in-loop
-            await transaction.save(recommendation);
-          }
+          await transaction.save(recommendation);
         }
 
         from.crawled = true;
