@@ -122,8 +122,9 @@ class ScrapedVideoData {
       res.channel = await ScrapedChannelData.scrape(page, res.channelURL, false);
     }
 
-    log.info(`Successfully scraped video data from: ${url}`);
-
+    log.info(`Successfully scraped video: ${url}\n"${
+      res.channel?.humanName
+    } / ${res.title}"`);
     return res;
   }
 }
