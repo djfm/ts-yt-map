@@ -1,9 +1,9 @@
 name: CI
-on: [push]
+on: [push, pull_request]
 jobs:
   ci:
       name: Continuous Integration
-      runs-on: docker:latest
+      runs-on: ubuntu-latest
       steps:
         - name: Check out the repo
           uses: actions/checkout@v3
