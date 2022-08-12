@@ -116,6 +116,8 @@ export const startServer = async (
   let seedVideoSentAt = new Date(0);
 
   app.post('/video/get-url-to-crawl', async (req, res) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
     const v = await videoRepo.query(`
       UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
       WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval OR latest_crawl_attempted_at IS NULL) AND crawl_attempt_count < 3 AND crawled = false)
@@ -126,16 +128,16 @@ export const startServer = async (
       if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10) {
         seedVideoSentAt = new Date();
         const url = cfg.seed_video;
-        log.info(`Sending seed video: ${url} to ${req.ip}`);
+        log.info(`Sending seed video: ${url} to ${ip}`);
         res.json({ url });
       } else {
         const url = null;
-        log.info(`No video to crawl at this time fo ${req.ip}`);
+        log.info(`No video to crawl at this time fo ${ip}`);
         res.json({ url });
       }
     } else {
       const { url } = v[0][0];
-      log.info(`Sending video to crawl: ${url} to ${req.ip}`);
+      log.info(`Sending video to crawl: ${url} to ${ip}`);
       res.json({ url });
     }
   });
