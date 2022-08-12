@@ -2,12 +2,35 @@
 
 A tool to extract recommendations from YouTube.
 
+## Principle
+
+It's a client / server architecture.
+
+The server centralizes the recommendations crawled from YouTube, and any number of
+clients can be spawned to crawl YouTube.from_id
+
+Each client will:
+
+- ask the server for a YouTube video URL to crawl
+- crawl it (main info) as well as its channel and the first 10 recommendations
+- send the result to the server
+- iterate, using a brand new browser session such that history doesn't play a role
+
+The most compute intensive operations are performed by the clients, so it's OK to have one server
+and many clients (hundreds probably work fine).
+
+We don't know yet what we will do with the dataset exactly, this is a basis for research.
+
 ## Prerequisites
 
 - a linux machine or something that runs `bash`
-- the latest `docker` with `docker-compose`
+- the latest `docker` with `docker compose`
 
-## Usage
+## Installing docker
+
+`docker` and `docker compose` are the easiest way to run either the server or the clients.
+
+A script named [setup-ubuntu](setup-ubuntu) is provided to install docker on a brand new `Ubuntu Jammy` machine.
 
 ## Starting a server
 
@@ -28,7 +51,16 @@ It is recommended to secure the connection with SSL.
 Since having SSL certificates in node apps is usually a pain in the ass, I'm using `Apache2` for the SSL termination, and it uses `mod_proxy` to forward the requests to node.
 
 If you have apache2 installed, you can use
-the [example vhost](examples/apache.vhost.conf), adapting what's necessary (a priori only the `ServerName`) to route traffic to node.
+the [example vhost](examples/yt.vhost.conf), adapting what's necessary (a priori only the `ServerName`) to route the traffic to node.
+
+You'll need to enable two `apache` modules:
+
+```bash
+sudo a2enmod proxy
+sudo a2enmod remoteip
+sudo systemctl reload apache2
+```
+
 
 ### Accessing the database interface
 
@@ -43,15 +75,21 @@ sudo htpasswd -c /etc/apache2/.htpasswd <user>
 ```
 ### Configuring `apache`
 
-Just copy the 2 adapted vhosts to `/etc/apache2/sites-available`, then run `sudo a2ensite` on each one,
+Just copy the 2 vhosts you have just adapted to `/etc/apache2/sites-available`, then run `sudo a2ensite` on each one,
 
-Then enable SSL on both of them by following the instructions from the [certbot website](https://certbot.eff.org/).
+then **enable SSL on both of them** by following the instructions from the [certbot website](https://certbot.eff.org/).
 
-### Starting a client
-
-Still assuming you have `docker compose`,
+Still assuming you have `docker compose` installed,
 just run:
 
 ```bash
 ./client <url> <password> [concurrency=4]
 ```
+
+If you wanna contribute your resources to our server feel free to spawn a client with:
+
+```bash
+./client https://yt.fmdj.fr tralala 8
+```
+
+I will work on providing a read-only access to the database for those interested.

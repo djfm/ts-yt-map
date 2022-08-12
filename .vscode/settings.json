@@ -4,11 +4,13 @@
     "adminer",
     "airbnb",
     "certbot",
+    "enmod",
     "ensite",
     "FrançoisMariedeJouvencel",
     "Kengo",
     "pageerror",
     "postgres",
+    "remoteip",
     "typeorm",
     "vhosts"
   ],
