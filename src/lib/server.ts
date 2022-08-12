@@ -18,6 +18,9 @@ export interface ServerHandle {
 }
 
 export const startServer = async (cfg: ServerConfig, log: Logger): Promise<ServerHandle> => {
+  let startedAt = Date.now();
+  let recommendationsSaved = 0;
+
   const pg = new PgClient({
     ...cfg.db,
     user: cfg.db.username,
@@ -164,6 +167,18 @@ export const startServer = async (cfg: ServerConfig, log: Logger): Promise<Serve
 
         from.crawled = true;
         await transaction.save(from);
+
+        recommendationsSaved += data.to.length;
+        const elapsed = (Date.now() - startedAt) / 1000 / 60;
+
+        if (elapsed > 0) {
+          const recommendationsPerMinute = Math.round((100 * recommendationsSaved) / elapsed) / 100;
+          log.info(`Saved recommendations per minute ${recommendationsPerMinute}`);
+
+          if (elapsed > 10) {
+            startedAt = Date.now();
+          }
+        }
       });
     } catch (e) {
       log.error(e);

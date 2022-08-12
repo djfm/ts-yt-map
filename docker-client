@@ -21,4 +21,4 @@ echo "Building app to run client..."
 
 docker compose up --build app
 
-docker compose run -it --rm app bash client "$server" "$password" "$concurrency"
+docker compose run -it --rm -e LOG=show app bash client "$server" "$password" "$concurrency"

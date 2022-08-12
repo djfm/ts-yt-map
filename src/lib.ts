@@ -77,14 +77,17 @@ export const log = winston.createLogger({
     json(),
   ),
   defaultMeta: { service: 'ts_yt_map' },
-  transports: ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly', 'combined'].map((level) => (
-    new winston.transports.File({ filename: `${logRoot}/${level}.log`, level: level === 'combined' ? undefined : level })
-  )),
+  transports:
+    ['error', 'combined'].map((level) => (
+      new winston.transports.File({
+        filename: `${logRoot}/${level}.log`, level: level === 'combined' ? undefined : level,
+      })
+    )),
 });
 
 const consoleFormat = format.printf((msg) => `${msg.level.padEnd(17)} [${msg.label}] [${msg.timestamp}] :: ${msg.message}`);
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.LOG === 'show') {
   log.add(new winston.transports.Console({
     format: combine(
       colorize({ all: true }),
