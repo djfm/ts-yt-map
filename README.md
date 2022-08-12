@@ -7,7 +7,7 @@ A tool to extract recommendations from YouTube.
 It's a client / server architecture.
 
 The server centralizes the recommendations crawled from YouTube, and any number of
-clients can be spawned to crawl YouTube.from_id
+clients can be spawned to crawl YouTube.
 
 Each client will:
 
@@ -36,7 +36,7 @@ A script named [setup-ubuntu](setup-ubuntu) is provided to install docker on a b
 
 ### Node server, using docker
 
-If you have `docker compose` running:
+If you have `docker compose`, running:
 
 ```bash
 ./server <password>
@@ -50,7 +50,7 @@ It is recommended to secure the connection with SSL.
 
 Since having SSL certificates in node apps is usually a pain in the ass, I'm using `Apache2` for the SSL termination, and it uses `mod_proxy` to forward the requests to node.
 
-If you have apache2 installed, you can use
+If you have `apache2` installed, you can use
 the [example vhost](examples/yt.vhost.conf), adapting what's necessary (a priori only the `ServerName`) to route the traffic to node.
 
 You'll need to enable two `apache` modules:
@@ -78,6 +78,8 @@ sudo htpasswd -c /etc/apache2/.htpasswd <user>
 Just copy the 2 vhosts you have just adapted to `/etc/apache2/sites-available`, then run `sudo a2ensite` on each one,
 
 then **enable SSL on both of them** by following the instructions from the [certbot website](https://certbot.eff.org/).
+
+## Running the client
 
 Still assuming you have `docker compose` installed,
 just run:
