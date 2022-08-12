@@ -2,8 +2,7 @@
 
 ## Random
 
-This one is interesting but hard to interpret:
-----------------------------------------------
+### This one is interesting but hard to interpret:
 
 ```sql
 SELECT count (DISTINCT from_id) as num_from,
@@ -16,27 +15,27 @@ where v_from.crawled = true and v_to.crawled = true
 
 This yields:
 
-```
-num_from	num_to
-3122	    3319
-```
+| num_from | num_to|
+| ---------| ------|
+| 3122     | 3319  |
 
 later:
-num_from	num_to
-5129	    5443
-```
+
+| num_from | num_to|
+| ---------| ------|
+| 5129     | 5443  |
 
 Does it mean the recommendations form a circle?
 
 ## Sanity checks
 
-Do all crawled videos have 10 recommendations?
-----------------------------------------------
+### Do all crawled videos have 10 recommendations?
 
 ```sql
 select from_id, count(to_id)
 from recommendation
 group by from_id
 having count(to_id) > 10
+order by count(to_id) desc
 LIMIT 50
 ```
