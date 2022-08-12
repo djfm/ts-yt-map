@@ -1,8 +1,8 @@
 seed_video: https://www.youtube.com/watch?v=HqsIOTEbriY
 port: 38478
 db:
-  host: localhost
-  port: 5433
+  host: postgres-test
+  port: 5432
   username: test
   password: test
   database: test-yt_rec_graph

@@ -15,6 +15,8 @@ RUN apt-get update \
   --no-install-recommends
 COPY . /root/yt_rec_graph
 WORKDIR /root/yt_rec_graph
-run npm install -g npm
+RUN npm install -g npm
 RUN yarn
 RUN yarn pm2 install typescript
+EXPOSE 38472/tcp
+EXPOSE 38478/tcp

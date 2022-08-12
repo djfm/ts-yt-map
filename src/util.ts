@@ -35,6 +35,14 @@ export class MockLogger implements LoggerInterface {
     return undefined;
   }
 
+  debug(message: string, ...meta: unknown[]): void
+
+  debug(message: unknown): unknown
+
+  debug(): unknown {
+    return undefined;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   close(): void {}
 }

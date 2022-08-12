@@ -3,6 +3,9 @@ services:
   app:
     image: yt-map
     build: .
+    ports:
+      - "38472:38472"
+      - "38478:38478"
   postgres-test:
     image: postgres
     restart: always

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+password="$1"
+
+if [ -z "$password" ]; then
+    echo "Usage: $0 <password>"
+    exit 1
+fi
+
+yarn pm2 start src/bin/server.ts -- "$password"
+
+yarn pm2 logs --raw

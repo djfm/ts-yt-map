@@ -5277,7 +5277,7 @@ eslint-config-airbnb-base@latest:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.7":
+"node-fetch@npm:2.6.7, node-fetch@npm:^2.6.7":
   version: 2.6.7
   resolution: "node-fetch@npm:2.6.7"
   dependencies:
@@ -7219,6 +7219,7 @@ eslint-config-airbnb-base@latest:
     eslint-plugin-import: ^2.25.2
     express: ^4.18.1
     jest: ^28.1.2
+    node-fetch: ^2.6.7
     nodemon: ^2.0.19
     pg: ^8.7.3
     pm2: ^5.2.0

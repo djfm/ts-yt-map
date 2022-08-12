@@ -17,8 +17,11 @@ if [ -z "$password" ]; then
   exit 1
 fi
 
-echo "Building app to run client..."
+echo "Running $concurrency clients against $server"
 
-docker compose up --build app
+for i in $(seq 1 "$concurrency"); do
+  echo "Running client $i"
+  yarn pm2 start -f src/bin/client.ts -- "$server" "$password"
+done
 
-docker compose run -it --rm -e LOG=show app bash client "$server" "$password" "$concurrency"
+yarn pm2 logs --raw

@@ -1,0 +1,8 @@
+seed_video: https://www.youtube.com/watch?v=HqsIOTEbriY
+port: 38472
+db:
+  host: postgres
+  port: 5432
+  username: postgres
+  password: hello
+  database: yt_rec_graph

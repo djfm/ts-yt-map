@@ -1,10 +1,14 @@
 {
   "cSpell.words": [
+    "adminer",
     "airbnb",
+    "certbot",
+    "ensite",
     "FrançoisMariedeJouvencel",
     "pageerror",
     "postgres",
-    "typeorm"
+    "typeorm",
+    "vhosts"
   ],
   "jest.jestCommandLine": "yarn test",
   "jest.autoRun": {

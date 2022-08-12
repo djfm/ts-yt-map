@@ -1,5 +1,8 @@
+import fetch from 'node-fetch';
+
 import ScrapedRecommendationData from '../scraper';
 import { sleep } from '../util';
+import { log } from '../lib';
 
 const server = process.argv[2];
 const password = process.argv[3];
@@ -20,7 +23,8 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
   const urlResp = await fetch(`${server}/video/get-url-to-crawl`, {
     method: 'POST',
     headers: {
-      'X-Password': password,
+      'Content-Type': 'application/json',
+      'x-password': password,
     },
   });
 
@@ -30,12 +34,13 @@ const scrapeOneVideoAndItsRecommendations = async (): Promise<void> => {
     await fetch(`${server}/recommendation`, {
       method: 'POST',
       headers: {
-        'X-Password': password,
         'Content-Type': 'application/json',
+        'x-password': password,
       },
       body: JSON.stringify(scraped),
     });
   } else {
+    log.error(urlResp);
     throw new Error('Failed to get URL to crawl');
   }
 };

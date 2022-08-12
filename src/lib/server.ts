@@ -101,10 +101,14 @@ export const startServer = async (
 
   app.use(bodyParser.json());
   app.use((req, res, next) => {
+    log.info('Authorizing request...');
+
     if (req.headers['x-password'] !== cfg.password) {
+      log.error('Invalid password');
       res.status(401).send('Unauthorized');
       return;
     }
+    log.info('Authorized');
 
     next();
   });
@@ -121,12 +125,18 @@ export const startServer = async (
     if (v[1] === 0) {
       if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10) {
         seedVideoSentAt = new Date();
-        res.send({ url: cfg.seed_video });
+        const url = cfg.seed_video;
+        log.info(`Sending seed video: ${url} to ${req.ip}`);
+        res.json({ url });
       } else {
-        res.send({ url: null });
+        const url = null;
+        log.info(`No video to crawl at this time fo ${req.ip}`);
+        res.json({ url });
       }
     } else {
-      res.send({ url: v[0][0].url });
+      const { url } = v[0][0];
+      log.info(`Sending video to crawl: ${url} to ${req.ip}`);
+      res.json({ url });
     }
   });
 
@@ -185,7 +195,7 @@ export const startServer = async (
 
   const server = app.listen(
     // eslint-disable-next-line no-console
-    cfg.port, () => console.log(`Listening on port ${cfg.port}`),
+    cfg.port, () => console.log(`Listening on port ${cfg.port}`, '0.0.0.0'),
   );
 
   return {
