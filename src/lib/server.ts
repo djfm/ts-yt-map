@@ -183,6 +183,7 @@ export const startServer = async (
           // resetting the average every 10 minutes
           if (elapsed > 10) {
             countingRecommendationsSince = Date.now();
+            recommendationsSaved = 0;
           }
         }
       });
