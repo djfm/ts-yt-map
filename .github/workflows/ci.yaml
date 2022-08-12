@@ -1,9 +1,15 @@
 name: CI
 on: [push]
 jobs:
-  Run-Tests:
-    runs-on: docker
-    steps:
-      - name: Check out repository code
-      uses: actions/checkout@v3
-      - run: docker compose up --build --remove-orphans -d && docker compose run --rm -e NODE_ENV=test-docker -e LOG=show app yarn test
+  ci:
+      name: Continuous Integration
+      runs-on: docker:latest
+      steps:
+        - name: Check out the repo
+          uses: actions/checkout@v3
+        - name: Install docker
+          uses: KengoTODA/actions-setup-docker-compose@main
+          with:
+            version: '1.29.2'
+        - name: Run the tests with Docker
+          run: docker compose up --build --remove-orphans -d && docker compose run --rm -e NODE_ENV=test-docker -e LOG=show app yarn test
