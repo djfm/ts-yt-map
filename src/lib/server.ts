@@ -5,7 +5,6 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
 import bodyParser from 'body-parser';
-import { Logger } from 'winston';
 
 import ScrapedVideoData, { Video } from '../video';
 import { Channel, ScrapedChannelData } from '../channel';
