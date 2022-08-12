@@ -142,8 +142,9 @@ export const startServer = async (cfg: ServerConfig, log: Logger): Promise<Serve
     try {
       await ds.manager.transaction(async (transaction: EntityManager) => {
         const from = await saveVideoWithTransaction(transaction, data.from);
+        from.crawled = true;
 
-        for (const [rank, video] of Object.entries(data.to)) {
+        const savePromises = Object.entries(data.to).map(async ([rank, video]) => {
           // eslint-disable-next-line no-await-in-loop
           const to = await saveVideoWithTransaction(transaction, video);
 
@@ -153,11 +154,10 @@ export const startServer = async (cfg: ServerConfig, log: Logger): Promise<Serve
           recommendation.createdAt = new Date();
           recommendation.updatedAt = new Date();
           recommendation.rank = +rank;
-          // eslint-disable-next-line no-await-in-loop
-          await transaction.save(recommendation);
-        }
+          return transaction.save(recommendation);
+        });
 
-        from.crawled = true;
+        await Promise.all(savePromises);
         await transaction.save(from);
 
         recommendationsSaved += data.to.length;
@@ -165,7 +165,7 @@ export const startServer = async (cfg: ServerConfig, log: Logger): Promise<Serve
 
         if (elapsed > 0) {
           const recommendationsPerMinute = Math.round(recommendationsSaved / elapsed);
-          log.info(`Saved recommendations per minute ${recommendationsPerMinute}`);
+          log.info(`Saved recommendations per minute: ${recommendationsPerMinute}`);
 
           // resetting the average every 10 minutes
           if (elapsed > 10) {
