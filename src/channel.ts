@@ -79,7 +79,7 @@ export class ScrapedChannelData {
     try {
       return await ScrapedChannelData.try_scrape(page, url, acceptCookies);
     } catch (e) {
-      if (attemptNumber <= maxAttempts) {
+      if (attemptNumber < maxAttempts) {
         log.info(`Failed to scrape channel URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
         return ScrapedChannelData.scrape(page, url, acceptCookies, attemptNumber + 1, maxAttempts);
       }

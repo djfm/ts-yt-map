@@ -56,7 +56,7 @@ class ScrapedVideoData {
     try {
       return await ScrapedVideoData.try_scrape(page, url, acceptCookies, channelCache);
     } catch (e) {
-      if (attemptNumber <= maxAttempts) {
+      if (attemptNumber < maxAttempts) {
         log.info(`Failed to scrape video URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
         return ScrapedVideoData.scrape(
           page, url, acceptCookies, attemptNumber + 1, maxAttempts, channelCache,
