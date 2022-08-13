@@ -1,5 +1,7 @@
 # ts-yt-map
 
+![Continuous Integration](https://github.com/djfm/ts-yt-map/actions/workflows/ci.yaml/badge.svg)
+
 A tool to extract recommendations from YouTube.
 
 ## Principle
