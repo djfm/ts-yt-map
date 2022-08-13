@@ -10,9 +10,15 @@ export const navigateTo = async (page: Page, url: string): Promise<void> => {
 
 export const acceptCookiesIfAny = async (page: Page): Promise<boolean> => {
   log.debug('Trying to accept cookies if any...');
-  const elt = await page.waitForSelector(
-    '.eom-button-row ytd-button-renderer.style-primary:last-of-type, [aria-label*="Accept"]',
-  );
+  let elt;
+  try {
+    elt = await page.waitForSelector(
+      '.eom-button-row ytd-button-renderer.style-primary:last-of-type, [aria-label*="Accept"]',
+    );
+  } catch (e) {
+    log.debug('No cookies to accept');
+    return true;
+  }
 
   if (!elt) {
     log.debug('No cookies were found');
