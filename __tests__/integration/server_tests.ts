@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { loadServerConfig, ServerConfig } from '../../src/lib';
 import { startServer, ServerHandle } from '../../src/lib/server';
 import { MockLogger } from '../../src/util';
+import { Client } from '../../src/lib/api';
 
 const password = 'secret';
 let cfg: ServerConfig;
@@ -27,15 +28,11 @@ describe('Test that the server starts', () => {
   });
 
   it('should get a URL to crawl from the server', async () => {
-    const resp = await fetch(`http://localhost:${cfg.port}/video/get-url-to-crawl`, {
-      method: 'POST',
-      headers: {
-        'x-password': password,
-      },
-    });
+    const api = new Client(
+      log, `http://localhost:${cfg.port}`, password,
+    );
 
-    expect(resp.status).toBe(200);
-    const json = await resp.json();
-    expect(json).toHaveProperty('url');
+    const url = await api.getUrlToCrawl();
+    expect(url.length).toBeGreaterThan(0);
   });
 });
