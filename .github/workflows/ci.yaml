@@ -5,6 +5,8 @@ jobs:
       name: Continuous Integration
       runs-on: ubuntu-latest
       steps:
+        - name: Check connectivity
+          run: curl https://www.youtube.com/watch?v=QOngA8bBbkg
         - name: Check out the repo
           uses: actions/checkout@v3
         - name: Run the tests with Docker
