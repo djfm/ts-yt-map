@@ -38,7 +38,13 @@ Otherwise follow the [official instructions](https://docs.docker.com/), upon whi
 
 ## Starting a server
 
-### Node server, using docker
+You'll need the node server itself, and another server that understands virtual hosts
+and SSL to do the SSL termination and forward the traffic to node.
+
+I describe how to do that with `apache` because I'm more familiar with it, but a similar result
+could be obtained with `nginx` for instance.
+
+### Starting the node server, using docker
 
 If you have `docker compose`, running:
 
