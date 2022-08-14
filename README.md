@@ -19,7 +19,7 @@ Each client will:
 - iterate, using a brand new browser session such that history doesn't play a role
 
 The most compute intensive operations are performed by the clients, so it's OK to have one server
-and many clients (hundreds probably work fine).
+and many clients (hundreds or thousands probably work fine).
 
 We don't know yet what we will do with the dataset exactly, this is a basis for research.
 
