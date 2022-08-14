@@ -34,6 +34,8 @@ We don't know yet what we will do with the dataset exactly, this is a basis for 
 
 A script named [setup-ubuntu](setup-ubuntu) is provided to install docker on a brand new `Ubuntu Jammy` machine.
 
+Otherwise follow the [official instructions](https://docs.docker.com/), upon which the script is heavily inspired.
+
 ## Starting a server
 
 ### Node server, using docker
