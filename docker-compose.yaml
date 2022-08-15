@@ -2,8 +2,6 @@ version: "3.9"
 services:
   server:
     build: .
-    expose:
-      - 38472
     ports:
       - "38472:38472"
     depends_on:

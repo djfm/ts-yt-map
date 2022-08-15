@@ -19,5 +19,5 @@ fi
 
 echo "Building app to run client..."
 
-docker compose build --remove-orphans client
-docker compose run -it --rm --service-ports -e LOG=show client bash docker-client "$server" "$password" "$concurrency"
+docker compose build client
+docker compose run -it -e LOG=show client bash docker-client "$server" "$password" "$concurrency"
