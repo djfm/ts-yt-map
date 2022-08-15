@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-docker compose up --build --remove-orphans -d
-docker compose run --rm -e NODE_ENV=test-docker -e LOG=show app bash do-run-tests

@@ -53,7 +53,7 @@ export const startServer = async (
   await ds.initialize();
   const videoRepo = ds.getRepository(Video);
 
-  const getChannelId = async (
+  const saveChannelAndGetId = async (
     transaction: EntityManager, channel: ScrapedChannelData,
   ): Promise<number> => {
     const channelEntity = await transaction.findOneBy(Channel, {
@@ -69,7 +69,22 @@ export const startServer = async (
     if (newChannelErrors.length > 0) {
       throw new Error(`Invalid channel: ${JSON.stringify(newChannelErrors)}`);
     }
-    return (await transaction.save(newChannel)).id;
+
+    try {
+      const savedChannel = await transaction.save(newChannel);
+      return savedChannel.id;
+    } catch (error) {
+      log.error('Failed to save channel', { error });
+      const savedChannel = await transaction.findOneBy(Channel, {
+        youtubeId: channel.youtubeId,
+      });
+
+      if (!savedChannel) {
+        throw new Error('Impossible condition occurred.');
+      }
+
+      return savedChannel.id;
+    }
   };
 
   const saveVideoWithTransaction = async (
@@ -87,7 +102,7 @@ export const startServer = async (
       return existingVideo;
     }
 
-    const channelId = await getChannelId(transaction, video.channel);
+    const channelId = await saveChannelAndGetId(transaction, video.channel);
 
     const videoEntity = new Video(video);
     videoEntity.channelId = channelId;
@@ -190,9 +205,9 @@ export const startServer = async (
         }
       });
     } catch (error) {
-      const msg = asError(error).message;
-      log.error(`Could not save recommendations: ${msg}`, { error });
-      res.status(500).send(msg);
+      const { message } = asError(error);
+      log.error(`Could not save recommendations: ${message}`, { error });
+      res.status(500).send({ ok: false, message });
       return;
     }
 

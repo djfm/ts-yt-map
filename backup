@@ -8,5 +8,6 @@ if [ -z "$target" ]; then
 fi
 
 # Backup script for the server
-docker compose up backup --build --remove-orphans -d
+docker compose up backup --build --remove-orphans
 docker compose run --rm backup sh -c 'PGPASSFILE=.pgpass pg_dump -U postgres -h postgres yt_rec_graph' > "$target"
+docker compose down

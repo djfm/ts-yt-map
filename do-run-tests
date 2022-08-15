@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
 
-# this is meant to be exevcuted inside "app" ib docker
-
-yarn test
+yarn test --detectOpenHandles

@@ -13,12 +13,12 @@ export class Client {
     const res = await this.api.saveRecommendations(scraped);
 
     if (!res.ok) {
-      this.log.error(res);
+      this.log.error(`Failed to save recommendations: ${res.statusText}`, { status: res.status });
       throw new Error('Failed to save recommendations');
     }
 
     const data = await res.json();
-    console.log(`Saved ${data.count} recommendations`);
+    this.log.info(`Saved ${data.count} recommendations`);
 
     return res;
   }

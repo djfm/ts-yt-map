@@ -22,6 +22,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await browser.close();
+  log.close();
 });
 
 describe('Basic browser scraping tests', () => {

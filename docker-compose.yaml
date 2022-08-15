@@ -1,11 +1,25 @@
 version: "3.9"
 services:
-  app:
-    image: yt-map
+  server:
     build: .
+    expose:
+      - 38472
     ports:
       - "38472:38472"
-      - "38478:38478"
+    depends_on:
+      - postgres
+  server-test:
+    build: .
+    ports:
+      - "38478:38472"
+    depends_on:
+      - postgres-test
+  client:
+    build: .
+  client-test:
+    build: .
+    depends_on:
+      - postgres-test
   postgres-test:
     image: postgres
     restart: always
@@ -37,6 +51,8 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    depends_on:
+      - postgres
 volumes:
   yt_graph:
     driver: local

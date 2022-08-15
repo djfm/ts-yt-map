@@ -7,5 +7,6 @@ if [ -z "$password" ]; then
     exit 1
 fi
 
-docker compose up --build --remove-orphans -d
-docker compose run --service-ports --rm -e NODE_ENV=production-docker -e LOG=show app bash docker-server "$password"
+docker compose up --build --remove-orphans -d server
+docker ps
+docker compose run --rm -e NODE_ENV=production-docker -e LOG=show server bash docker-server "$password"
