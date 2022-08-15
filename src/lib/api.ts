@@ -1,8 +1,8 @@
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 import { LoggerInterface } from '../lib';
-import ScrapedRecommendationData from '../scraper';
+import { ScrapedRecommendationData } from '../scraper';
 
-export class Client {
+export class API {
   constructor(
     private readonly log: LoggerInterface,
     private readonly url: string,
@@ -10,13 +10,21 @@ export class Client {
   ) {}
 
   public async getUrlToCrawl(): Promise<string> {
-    const urlResp = await fetch(`${this.url}/video/get-url-to-crawl`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-    });
+    let urlResp: Response;
+
+    try {
+      urlResp = await fetch(`${this.url}/video/get-url-to-crawl`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-password': this.password,
+        },
+      });
+    } catch (e) {
+      this.log.error('Failed to get URL to crawl', { error: e });
+      this.log.error(`Server URL was: ${this.url}`);
+      throw e;
+    }
 
     if (urlResp.ok) {
       const u = await urlResp.json();
@@ -27,7 +35,7 @@ export class Client {
     throw new Error('Failed to get URL to crawl');
   }
 
-  public async saveRecommendations(recoData: ScrapedRecommendationData): Promise<void> {
+  public async saveRecommendations(recoData: ScrapedRecommendationData): Promise<Response> {
     const res = await fetch(`${this.url}/recommendation`, {
       method: 'POST',
       headers: {
@@ -37,11 +45,13 @@ export class Client {
       body: JSON.stringify(recoData),
     });
 
-    if (!res.ok) {
-      this.log.error(res);
-      throw new Error('Failed to save recommendations');
+    if (res.ok) {
+      return res;
     }
+
+    this.log.error(res);
+    throw new Error('Failed to save recommendations');
   }
 }
 
-export default Client;
+export default API;

@@ -1,7 +1,8 @@
-import { loadServerConfig, log } from '../lib';
+import { loadServerConfig, createLogger } from '../lib';
 import startServer from '../lib/server';
 
 async function main() {
+  const log = await createLogger();
   const password = process.argv[2];
 
   if (typeof password !== 'string') {

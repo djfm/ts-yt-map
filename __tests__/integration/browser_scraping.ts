@@ -1,29 +1,32 @@
-import { Page } from 'puppeteer';
-
-import Browser from '../../src/browser';
-import { loadChromeConfig } from '../../src/lib';
-import ScrapedVideoData from '../../src/video';
-import ScrapedChannelData, { ChannelType } from '../../src/channel';
+import { Browser } from '../../src/browser';
+import { loadChromeConfig, createLogger, LoggerInterface } from '../../src/lib';
+import { ChannelType } from '../../src/channel';
+import { Scraper } from '../../src/scraper';
+import { PageUtil } from '../../src/pageUtil';
 
 jest.setTimeout(600000);
 
 let browser: Browser;
-let page: Page;
+let scraper: Scraper;
+let page: PageUtil;
+let log: LoggerInterface;
 
 beforeEach(async () => {
   const cfg = await loadChromeConfig();
   browser = await Browser.launch(cfg);
-  page = await browser.newPage();
+  const browserPage = await browser.newPage();
+  log = await createLogger();
+  scraper = new Scraper(log);
+  page = new PageUtil(log, browserPage);
 });
 
 afterEach(async () => {
-  await page.close();
   await browser.close();
 });
 
 describe('Basic browser scraping tests', () => {
   it('should scrape a single video', async () => {
-    const video = await ScrapedVideoData.scrape(page, 'https://www.youtube.com/watch?v=a1zevmYu1v4');
+    const video = await scraper.scrapeVideo(page, 'https://www.youtube.com/watch?v=a1zevmYu1v4');
     expect(video.url).toBe('https://www.youtube.com/watch?v=a1zevmYu1v4');
     expect(video.channelURL).toBe('https://www.youtube.com/c/FrançoisMariedeJouvencel');
     expect(video.title).toBe('Drone over Quiet Lake in the Morning');
@@ -38,7 +41,7 @@ describe('Basic browser scraping tests', () => {
   });
 
   it('should scrape a single channel', async () => {
-    const channel = await ScrapedChannelData.scrape(page, 'https://www.youtube.com/c/FrançoisMariedeJouvencel');
+    const channel = await scraper.scrapeChannel(page, 'https://www.youtube.com/c/FrançoisMariedeJouvencel');
 
     expect(channel.htmlLang).toBe('en');
     expect(channel.humanName).toBe('François-Marie de Jouvencel');

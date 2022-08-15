@@ -45,4 +45,8 @@ export class MockLogger implements LoggerInterface {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   close(): void {}
+
+  getRootDirectory(): string {
+    return '/tmp';
+  }
 }

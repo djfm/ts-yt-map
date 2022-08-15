@@ -14,6 +14,7 @@ import { ServerConfig, LoggerInterface } from '../lib';
 
 export interface ServerHandle {
   close: () => Promise<void>,
+  pg: PgClient,
 }
 
 export const startServer = async (
@@ -56,7 +57,7 @@ export const startServer = async (
     transaction: EntityManager, channel: ScrapedChannelData,
   ): Promise<number> => {
     const channelEntity = await transaction.findOneBy(Channel, {
-      url: channel.url,
+      youtubeId: channel.youtubeId,
     });
 
     if (channelEntity) {
@@ -146,7 +147,7 @@ export const startServer = async (
     if (e instanceof Error) {
       return e;
     }
-    return new Error('Could not save recommendations.');
+    return new Error('Unknown error');
   };
 
   app.post('/recommendation', async (req, res) => {
@@ -187,13 +188,14 @@ export const startServer = async (
           }
         }
       });
-    } catch (e) {
-      log.error(e);
-      res.status(500).send(asError(e).message);
+    } catch (error) {
+      const msg = asError(error).message;
+      log.error(`Could not save recommendations: ${msg}`, { error });
+      res.status(500).send(msg);
       return;
     }
 
-    res.send({ ok: true });
+    res.json({ ok: true, count: data.to.length });
   });
 
   const server = app.listen(
@@ -202,6 +204,7 @@ export const startServer = async (
   );
 
   return {
+    pg,
     close: async () => {
       await new Promise((resolve, reject) => {
         server.close(
