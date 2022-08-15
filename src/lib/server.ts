@@ -103,9 +103,10 @@ export const startServer = async (
   app.use(bodyParser.json());
   app.use((req, res, next) => {
     log.debug('Authorizing request...');
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     if (req.headers['x-password'] !== cfg.password) {
-      log.error('Invalid password');
+      log.error(`Invalid password from ${ip}`, { ip });
       res.status(401).send('Unauthorized');
       return;
     }
