@@ -28,6 +28,10 @@ services:
       - "5432:5432"
     volumes:
       - yt_graph:/var/lib/postgresql/data
+  backup:
+    build: ./backuper
+    depends_on:
+      - postgres
   adminer:
     image: adminer
     restart: always

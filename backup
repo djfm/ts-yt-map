@@ -1,0 +1,12 @@
+#!/bin/bash
+
+target="$1"
+
+if [ -z "$target" ]; then
+    echo "Usage: $0 <target>"
+    exit 1
+fi
+
+# Backup script for the server
+docker compose up backup --build --remove-orphans -d
+docker compose run --rm backup sh -c 'PGPASSFILE=.pgpass pg_dump -U postgres -h postgres yt_rec_graph' > "$target"
