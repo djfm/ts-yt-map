@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-docker compose build client-test
+docker compose up --build --rm client-test
 docker compose run --rm -e NODE_ENV=test-docker -e LOG=show client-test bash do-run-tests

@@ -35,7 +35,9 @@ export class API {
     throw new Error('Failed to get URL to crawl');
   }
 
-  public async saveRecommendations(recoData: ScrapedRecommendationData): Promise<Response> {
+  public async saveRecommendations(
+    recoData: ScrapedRecommendationData,
+  ): Promise<{ok: boolean, count: number}> {
     const res = await fetch(`${this.url}/recommendation`, {
       method: 'POST',
       headers: {
@@ -46,7 +48,7 @@ export class API {
     });
 
     if (res.ok) {
-      return res;
+      return res.json();
     }
 
     this.log.error(res);

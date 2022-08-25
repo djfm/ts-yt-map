@@ -8,4 +8,4 @@ if [ -z "$password" ]; then
 fi
 
 docker compose up server --build -d
-docker compose run --service-ports -e NODE_ENV=production-docker -e LOG=show --rm server bash docker-server "$password"
+docker compose run -e NODE_ENV=production-docker -e LOG=show --rm docker-server postgres-server bash docker-server "$password"

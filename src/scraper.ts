@@ -1,6 +1,6 @@
 import { loadChromeConfig, LoggerInterface } from './lib';
 import Browser from './browser';
-import ScrapedVideoData from './video';
+import { ScrapedVideoData, Video } from './video';
 import { ScrapedChannelData, asChannelType } from './channel';
 import PageUtil from './pageUtil';
 
@@ -8,7 +8,19 @@ export class ScrapedRecommendationData {
   constructor(
     public from: ScrapedVideoData,
     public to: ScrapedVideoData[],
-  ) {}
+  ) {
+    this.from = new Video(from);
+  }
+}
+
+export class ScrapedRecommendation {
+  constructor(
+    public from: ScrapedVideoData,
+    public to: ScrapedVideoData[],
+  ) {
+    this.from = new Video(from);
+    this.to = to.map((v) => new Video(v));
+  }
 }
 
 export class Scraper {
@@ -151,7 +163,6 @@ export class Scraper {
         this.log.info(`Failed to scrape channel URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
         return this.scrapeChannel(page, url, acceptCookies, attemptNumber + 1, maxAttempts);
       }
-
       this.log.error(`Failed to scrape channel URL: ${url}`, { error: e });
       await page.takeScreenshot('channel_scrape_failure');
       throw e;
@@ -169,7 +180,6 @@ export class Scraper {
 
     const res = new ScrapedChannelData();
     res.url = url;
-
     res.htmlLang = await page.getAttribute('html', 'lang');
 
     const urlSegments = url.split(/\/+/);
@@ -193,7 +203,12 @@ export class Scraper {
     res.youtubeId = youtubeId;
 
     await page.navigateTo(`${url}/about`);
-    res.description = await page.getInnerText('#left-column #description');
+    try {
+      res.description = await page.getInnerText('#left-column #description');
+    } catch (e) {
+      res.description = '';
+      this.log.error(`Failed to scrape channel description: ${url}`, { error: e });
+    }
 
     res.channelType = asChannelType(urlSegments[2]);
 

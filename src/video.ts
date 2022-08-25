@@ -4,7 +4,7 @@ import { Length } from 'class-validator';
 import ScrapedChannelData from './channel';
 import { convertNumber } from './util';
 
-class ScrapedVideoData {
+export class ScrapedVideoData {
   @Column()
   @Length(1)
   public url: string = '';

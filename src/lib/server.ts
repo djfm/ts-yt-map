@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
@@ -9,20 +9,30 @@ import bodyParser from 'body-parser';
 import ScrapedVideoData, { Video } from '../video';
 import { Channel, ScrapedChannelData } from '../channel';
 import { Recommendation } from '../recommendation';
-import { ScrapedRecommendationData } from '../scraper';
+import { ScrapedRecommendation } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
 
 export interface ServerHandle {
   close: () => Promise<void>,
   pg: PgClient,
+  testing: { resetTimeSinceLastURLToCrawlSent(): void; },
 }
+
+const asError = (e: unknown):Error => {
+  if (e instanceof Error) {
+    return e;
+  }
+  return new Error('Unknown error');
+};
+
+let seedVideoSentAt = new Date(0);
+
+let countingRecommendationsSince = Date.now();
+let recommendationsSaved = 0;
 
 export const startServer = async (
   cfg: ServerConfig, log: LoggerInterface,
 ): Promise<ServerHandle> => {
-  let countingRecommendationsSince = Date.now();
-  let recommendationsSaved = 0;
-
   const pg = new PgClient({
     ...cfg.db,
     user: cfg.db.username,
@@ -52,65 +62,84 @@ export const startServer = async (
 
   await ds.initialize();
   const videoRepo = ds.getRepository(Video);
+  const channelRepo = ds.getRepository(Channel);
+
+  let countingVideosAskedSince = Date.now();
+
+  const getVideoToCrawl = async (): Promise<{ ok: boolean, url: string | undefined}> => {
+    if (Date.now() - countingVideosAskedSince > 1000 * 10 * 60) {
+      countingVideosAskedSince = Date.now();
+    }
+
+    const v = await videoRepo.query(`
+        UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
+        WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval) AND crawl_attempt_count < 3 AND crawled = false)
+        RETURNING url
+      `);
+
+    if (v[1] === 0) {
+      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10 * 60) {
+        seedVideoSentAt = new Date();
+        const url = cfg.seed_video;
+        return { ok: true, url };
+      }
+
+      const url = undefined;
+      return { ok: false, url };
+    }
+
+    const { url } = v[0][0];
+    return { ok: true, url };
+  };
 
   const saveChannelAndGetId = async (
-    transaction: EntityManager, channel: ScrapedChannelData,
+    repo: Repository<Channel>, channel: ScrapedChannelData,
   ): Promise<number> => {
-    const channelEntity = await transaction.findOneBy(Channel, {
+    const currentChannel = await repo.findOneBy({
       youtubeId: channel.youtubeId,
     });
 
-    if (channelEntity) {
-      return channelEntity.id;
+    if (currentChannel) {
+      return currentChannel.id;
     }
 
     const newChannel = new Channel(channel);
     const newChannelErrors = await validate(newChannel);
     if (newChannelErrors.length > 0) {
-      throw new Error(`Invalid channel: ${JSON.stringify(newChannelErrors)}`);
+      const msg = newChannelErrors.map((e) => e.constraints).join(', ');
+      log.error(`Failed to save channel: ${msg}`, { newChannelErrors });
+      throw new Error(msg);
     }
-
-    try {
-      const savedChannel = await transaction.save(newChannel);
-      return savedChannel.id;
-    } catch (error) {
-      log.error('Failed to save channel', { error });
-      const savedChannel = await transaction.findOneBy(Channel, {
-        youtubeId: channel.youtubeId,
-      });
-
-      if (!savedChannel) {
-        throw new Error('Impossible condition occurred.');
-      }
-
-      return savedChannel.id;
-    }
+    const savedChannel = await repo.save(newChannel);
+    return savedChannel.id;
   };
 
-  const saveVideoWithTransaction = async (
-    transaction: EntityManager, video: ScrapedVideoData,
+  const saveVideo = async (
+    repo: Repository<Video>, channelRepo: Repository<Channel>, video: ScrapedVideoData,
   ): Promise<Video> => {
     if (!video.channel) {
       throw new Error('Video must have a channel');
     }
 
-    const existingVideo = await transaction.findOneBy(Video, {
-      url: video.url,
-    });
-
-    if (existingVideo) {
-      return existingVideo;
-    }
-
-    const channelId = await saveChannelAndGetId(transaction, video.channel);
+    const channelId = await saveChannelAndGetId(channelRepo, video.channel);
 
     const videoEntity = new Video(video);
     videoEntity.channelId = channelId;
     const videoErrors = await validate(videoEntity);
     if (videoErrors.length > 0) {
-      throw new Error(`Invalid video: ${JSON.stringify(videoErrors)}`);
+      const msg = `Invalid video: ${JSON.stringify(videoErrors)}`;
+      log.error(msg, { video });
+      throw new Error(msg);
     }
-    return transaction.save(videoEntity);
+
+    const saved = await repo.findOneBy({ url: videoEntity.url });
+
+    if (saved) {
+      return saved;
+    }
+
+    const newVideo = await repo.save(videoEntity);
+    return newVideo;
   };
 
   const app = express();
@@ -130,54 +159,42 @@ export const startServer = async (
     next();
   });
 
-  let seedVideoSentAt = new Date(0);
-
   app.post('/video/get-url-to-crawl', async (req, res) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    // TODO: debug why the same video is sometimes sent twice
-    const v = await videoRepo.query(`
-      UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
-      WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval OR latest_crawl_attempted_at IS NULL) AND crawl_attempt_count < 3 AND crawled = false)
-      RETURNING url
-    `);
+    const u = await getVideoToCrawl();
 
-    if (v[1] === 0) {
-      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10) {
-        seedVideoSentAt = new Date();
-        const url = cfg.seed_video;
-        log.info(`Sending seed video: ${url} to ${ip}`);
-        res.json({ url });
-      } else {
-        const url = null;
-        log.info(`No video to crawl at this time fo ${ip}`);
-        res.json({ url });
-      }
+    if (u.ok) {
+      log.info(`Sent video to crawl ${u.url} to ${ip}`);
+      res.status(200).json(u);
     } else {
-      const { url } = v[0][0];
-      log.info(`Sending video to crawl: ${url} to ${ip}`);
-      res.json({ url });
+      log.info(`No video to crawl for ${ip}`);
+      res.status(504).json(u);
     }
   });
 
-  const asError = (e: unknown):Error => {
-    if (e instanceof Error) {
-      return e;
-    }
-    return new Error('Unknown error');
-  };
-
   app.post('/recommendation', async (req, res) => {
-    const data = req.body as ScrapedRecommendationData;
+    const data = new ScrapedRecommendation(req.body.from, req.body.to);
+    const errors = await validate(data);
+    if (errors.length > 0) {
+      log.error('Invalid recommendations', { errors });
+      res.status(400).json({ OK: false, count: 0 });
+      throw new Error('Error in recommendations data.');
+    }
+
+    log.info('Received recommendations to save.');
 
     try {
       await ds.manager.transaction(async (transaction: EntityManager) => {
-        const from = await saveVideoWithTransaction(transaction, data.from);
+        const from = await saveVideo(videoRepo, channelRepo, data.from);
+
         from.crawled = true;
 
-        const savePromises = Object.entries(data.to).map(async ([rank, video]) => {
+        Object.entries(data.to).forEach(async ([rank, video]) => {
           // eslint-disable-next-line no-await-in-loop
-          const to = await saveVideoWithTransaction(transaction, video);
+          const to = await saveVideo(videoRepo, channelRepo, video);
+
+          log.info(`Saving recommendation from ${from.id} to ${to.id}`);
 
           const recommendation = new Recommendation();
           recommendation.fromId = from.id;
@@ -185,10 +202,9 @@ export const startServer = async (
           recommendation.createdAt = new Date();
           recommendation.updatedAt = new Date();
           recommendation.rank = +rank;
-          return transaction.save(recommendation);
+          await transaction.save(recommendation);
         });
 
-        await Promise.all(savePromises);
         await transaction.save(from);
 
         recommendationsSaved += data.to.length;
@@ -205,14 +221,15 @@ export const startServer = async (
           }
         }
       });
+
+      log.info(await ds.query('select count(*) from recommendation'));
+
+      res.json({ ok: true, count: data.to.length });
     } catch (error) {
       const { message } = asError(error);
       log.error(`Could not save recommendations: ${message}`, { error });
       res.status(500).send({ ok: false, message });
-      return;
     }
-
-    res.json({ ok: true, count: data.to.length });
   });
 
   const server = app.listen(
@@ -236,6 +253,14 @@ export const startServer = async (
       });
 
       await pg.end();
+    },
+
+    testing: {
+      resetTimeSinceLastURLToCrawlSent: () => {
+        const dt = 1000 * 60 * 10 * 2;
+        countingVideosAskedSince = -dt;
+        seedVideoSentAt = new Date(0);
+      },
     },
   };
 };
