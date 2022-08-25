@@ -194,6 +194,21 @@ export const startServer = async (
     log.info('Received recommendations to save.');
 
     try {
+      const videoRepo = ds.getRepository(Video);
+      const from = await videoRepo.findOneBy({ url: data.from.url });
+
+      if (from) {
+        const recommendations = await ds.getRepository(Recommendation).findBy({
+          fromId: from.id,
+        });
+
+        if (recommendations.length >= 10) {
+          log.info('Recommendations already exist.');
+          res.status(201).json({ ok: true, count: 0 });
+          return;
+        }
+      }
+
       await ds.manager.transaction(async (transaction: EntityManager) => {
         const from = await saveVideo(videoRepo, channelRepo, data.from);
 
