@@ -150,7 +150,7 @@ export const startServer = async (
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     if (req.headers['x-password'] !== cfg.password) {
-      log.error(`Invalid password from ${ip}`, { ip });
+      log.error(`Invalid password from ${ip}, got ${req.headers['x-password']} instead of ${cfg.password}`);
       res.status(401).send('Unauthorized');
       return;
     }
