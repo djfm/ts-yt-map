@@ -190,21 +190,23 @@ export const startServer = async (
 
         from.crawled = true;
 
-        Object.entries(data.to).forEach(async ([rank, video]) => {
+        const saves = Object.entries(data.to)
+          .map(async ([rank, video]): Promise<Recommendation> => {
           // eslint-disable-next-line no-await-in-loop
-          const to = await saveVideo(videoRepo, channelRepo, video);
+            const to = await saveVideo(videoRepo, channelRepo, video);
 
-          log.info(`Saving recommendation from ${from.id} to ${to.id}`);
+            log.info(`Saving recommendation from ${from.id} to ${to.id}`);
 
-          const recommendation = new Recommendation();
-          recommendation.fromId = from.id;
-          recommendation.toId = to.id;
-          recommendation.createdAt = new Date();
-          recommendation.updatedAt = new Date();
-          recommendation.rank = +rank;
-          await transaction.save(recommendation);
-        });
+            const recommendation = new Recommendation();
+            recommendation.fromId = from.id;
+            recommendation.toId = to.id;
+            recommendation.createdAt = new Date();
+            recommendation.updatedAt = new Date();
+            recommendation.rank = +rank;
+            return transaction.save(recommendation);
+          });
 
+        await Promise.all(saves);
         await transaction.save(from);
 
         recommendationsSaved += data.to.length;
