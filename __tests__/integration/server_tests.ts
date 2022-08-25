@@ -50,15 +50,4 @@ describe('the server abasic behaviour', () => {
     expect(resp.ok).toBe(true);
     expect(resp.count).toBe(10);
   });
-
-  xit('should get 10 different URLs to crawl', async () => {
-    const api = new API(
-      log, serverURL, password,
-    );
-
-    const urls = await Promise.all(Array.from({ length: 10 }, () => api.getUrlToCrawl()));
-    const set = new Set(urls);
-
-    expect(set.size).toBe(10);
-  });
 });

@@ -67,15 +67,18 @@ export const startServer = async (
   let countingVideosAskedSince = Date.now();
 
   const getVideoToCrawl = async (): Promise<{ ok: boolean, url: string | undefined}> => {
+    const urlsSent = new Set<string>();
+
     if (Date.now() - countingVideosAskedSince > 1000 * 10 * 60) {
       countingVideosAskedSince = Date.now();
+      urlsSent.clear();
     }
 
     const v = await videoRepo.query(`
         UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
-        WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval) AND crawl_attempt_count < 3 AND crawled = false)
+        WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at < '10 minutes'::interval) AND crawl_attempt_count < 3 AND crawled = false)
         RETURNING url
-      `);
+    `);
 
     if (v[1] === 0) {
       if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10 * 60) {
@@ -89,7 +92,13 @@ export const startServer = async (
     }
 
     const { url } = v[0][0];
-    return { ok: true, url };
+
+    if (!urlsSent.has(url)) {
+      urlsSent.add(url);
+      return { ok: true, url };
+    }
+
+    return getVideoToCrawl();
   };
 
   const saveChannelAndGetId = async (
