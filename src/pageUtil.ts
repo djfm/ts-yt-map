@@ -3,15 +3,24 @@ import { LoggerInterface } from './lib';
 import { sleep } from './util';
 
 export class PageUtil {
+  private waitDelay: number = 5000;
+
   constructor(
     private readonly log: LoggerInterface,
     private readonly page: Page,
   ) {}
 
+  setWaitDelay = (ms: number): PageUtil => {
+    this.waitDelay = ms;
+    return this;
+  };
+
+  getWaitDelay = (): number => this.waitDelay;
+
   navigateTo = async (url: string) => {
     this.log.debug(`Navigating to URL: ${url}`);
     await this.page.goto(url);
-    await sleep(5000);
+    await sleep(this.waitDelay);
   };
 
   acceptCookiesIfAny = async (): Promise<boolean> => {
@@ -32,7 +41,7 @@ export class PageUtil {
     }
 
     await elt.click();
-    await sleep(5000);
+    await sleep(this.waitDelay);
 
     this.log.debug('Cookies were clicked');
 
@@ -59,7 +68,7 @@ export class PageUtil {
     if (!res) {
       if (remainingAttempts > 0) {
         // eslint-disable-next-line no-promise-executor-return
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, this.waitDelay));
         return this.tryToGetInnerText(selector, remainingAttempts - 1);
       }
 
