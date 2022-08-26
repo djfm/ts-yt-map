@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository, LessThan } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
@@ -15,7 +15,6 @@ import { ServerConfig, LoggerInterface } from '../lib';
 export interface ServerHandle {
   close: () => Promise<void>,
   pg: PgClient,
-  testing: { resetTimeSinceLastURLToCrawlSent(): void; },
 }
 
 const asError = (e: unknown):Error => {
@@ -61,7 +60,6 @@ export const startServer = async (
   });
 
   await ds.initialize();
-  const videoRepo = ds.getRepository(Video);
   const channelRepo = ds.getRepository(Channel);
 
   let countingVideosAskedSince = Date.now();
@@ -73,24 +71,26 @@ export const startServer = async (
       countingVideosAskedSince = Date.now();
     }
 
-    const v = await videoRepo.query(`
-        UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
-        WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval) AND crawl_attempt_count < 3 AND crawled = false)
-        RETURNING url
-    `);
+    const v = await ds.transaction(async (tm): Promise<URLResp> => {
+      const url = await tm.findOneBy(Video, {
+        crawled: false,
+        crawlAttemptCount: LessThan(3),
+        latestCrawlAttemptedAt: LessThan(new Date()),
+      });
 
-    if (v[1] === 0) {
-      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10 * 60) {
-        seedVideoSentAt = new Date();
-        const url = cfg.seed_video;
-        return { ok: true, url };
+      if (!url) {
+        if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10 * 60) {
+          seedVideoSentAt = new Date();
+          return { ok: true, url: cfg.seed_video };
+        }
+
+        return { ok: false };
       }
 
       return { ok: false };
-    }
+    });
 
-    const { url } = v[0][0];
-    return { ok: true, url };
+    return v;
   };
 
   const saveChannelAndGetId = async (
@@ -162,7 +162,7 @@ export const startServer = async (
 
   app.post('/video/get-url-to-crawl', async (req, res) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-
+    req.setTimeout(1000 * 5);
     const u = await getVideoToCrawl();
 
     if (u.ok) {
@@ -255,6 +255,27 @@ export const startServer = async (
     cfg.port, () => console.log(`Listening on port ${cfg.port}`, '0.0.0.0'),
   );
 
+  app.post('/testing/resetTime', async (req, res) => {
+    const dt = 1000 * 60 * 10 * 2;
+    countingVideosAskedSince = -dt;
+    seedVideoSentAt = new Date(0);
+    res.json({ ok: true });
+  });
+
+  app.post('/testing/clearDb', async (req, res) => {
+    const queries = [
+      'truncate recommendation cascade',
+      'truncate video cascade',
+      'truncate channel cascade',
+    ];
+
+    queries.forEach(async (query) => {
+      await ds.query(query);
+    });
+
+    res.json({ queries });
+  });
+
   return {
     pg,
     close: async () => {
@@ -271,14 +292,6 @@ export const startServer = async (
       });
 
       await pg.end();
-    },
-
-    testing: {
-      resetTimeSinceLastURLToCrawlSent: () => {
-        const dt = 1000 * 60 * 10 * 2;
-        countingVideosAskedSince = -dt;
-        seedVideoSentAt = new Date(0);
-      },
     },
   };
 };

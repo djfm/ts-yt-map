@@ -64,6 +64,9 @@ export class ServerConfig {
   @Max(65535)
   public port = 0;
 
+  @Length(1, 255)
+  public host:string = '';
+
   public db = new DbConfig();
 
   @Length(1, 255)

@@ -1,4 +1,5 @@
 seed_video: https://www.youtube.com/watch?v=HqsIOTEbriY
+host: server-test
 port: 38478
 db:
   host: postgres-test
