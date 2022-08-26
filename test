@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-docker compose up --build client-test
+docker compose build server-test
+docker-compose run --service-ports -e NODE_ENV=test-docker -e LOG=show --rm -d server-test bash docker-server secret
 docker compose run --rm -e NODE_ENV=test-docker -e LOG=show client-test bash do-run-tests
