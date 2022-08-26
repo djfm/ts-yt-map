@@ -12,14 +12,14 @@
     "postgres",
     "remoteip",
     "typeorm",
-    "vhosts"
+    "vhosts",
   ],
   "jest.jestCommandLine": "yarn test",
   "jest.autoRun": {
     "enabled": false,
   },
   "files.exclude": {
-    "**/.git": true,
+    "**/.git": false,
     "**/.svn": true,
     "**/.hg": true,
     "**/CVS": true,
