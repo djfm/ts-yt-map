@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:18
 
 RUN apt-get update \
   && apt-get install -y wget gnupg \
@@ -11,12 +11,12 @@ RUN apt-get update \
                     fonts-thai-tlwg \
                     fonts-kacst \
                     fonts-freefont-ttf libxss1 \
-  && apt install -y bash \
-  --no-install-recommends
+                    bash --no-install-recommends
 COPY . /root/yt_rec_graph
 WORKDIR /root/yt_rec_graph
-RUN npm install -g npm
 RUN yarn
-RUN yarn pm2 install typescript
+RUN npm install pm2 -g
+RUN pm2 install typescript
+
 EXPOSE 38472/tcp
 EXPOSE 38478/tcp
