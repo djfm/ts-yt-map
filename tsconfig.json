@@ -5,6 +5,7 @@
     "noEmit": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "inlineSourceMap": true,
   },
   "exclude": ["**/*.js, node_modules"]
 }
