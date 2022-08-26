@@ -66,12 +66,11 @@ export const startServer = async (
 
   let countingVideosAskedSince = Date.now();
 
-  const getVideoToCrawl = async (): Promise<{ ok: boolean, url: string | undefined}> => {
-    const urlsSent = new Set<string>();
+  type URLResp = { ok: true, url: string } | { ok: false };
 
+  const getVideoToCrawl = async (): Promise<URLResp> => {
     if (Date.now() - countingVideosAskedSince > 1000 * 10 * 60) {
       countingVideosAskedSince = Date.now();
-      urlsSent.clear();
     }
 
     const v = await videoRepo.query(`
@@ -87,18 +86,11 @@ export const startServer = async (
         return { ok: true, url };
       }
 
-      const url = undefined;
-      return { ok: false, url };
+      return { ok: false };
     }
 
     const { url } = v[0][0];
-
-    if (!urlsSent.has(url)) {
-      urlsSent.add(url);
-      return { ok: true, url };
-    }
-
-    return getVideoToCrawl();
+    return { ok: true, url };
   };
 
   const saveChannelAndGetId = async (
