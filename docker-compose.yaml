@@ -1,35 +1,18 @@
-version: "4"
+version: "3.9"
 services:
   client:
-    build: ./docker/client
+    build:
+      context: .
+      dockerfile: ./docker/client/Dockerfile
 
   server:
-    build: ./docker/server
+    build:
+      context: .
+      dockerfile: ./docker/server/Dockerfile
     ports:
       - "38472:38472"
     depends_on:
       - postgres
-
-  server-test:
-    build: .
-    ports:
-      - "38478:38478"
-    depends_on:
-      - postgres-test
-    environment:
-      - NODE_ENV=test-docker
-      - LOG=show
-    command: yarn server secret
-
-  tester:
-    build:
-      context: .
-      dockerfile: ./docker/tester/Dockerfile
-    depends_on:
-      - server-test
-    environment:
-      - NODE_ENV=test-docker
-      - LOG=show
 
   postgres:
     image: postgres
@@ -42,8 +25,6 @@ services:
       - "5432:5432"
     volumes:
       - yt_graph:/var/lib/postgresql/data
-      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
-      - ./my-pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
 
   postgres-test:
     image: postgres
@@ -55,14 +36,17 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - test-yt_rec_graph:/var/lib/postgresql/data
-      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
-      - ./my-pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - test-yt_graph:/var/lib/postgresql/data
 
   backup:
-    build: ./backuper
+    build:
+      context: .
+      dockerfile: ./docker/backup/Dockerfile
     depends_on:
       - postgres
+    environment:
+      - NODE_ENV=production-docker
+      - LOG=show
 
   adminer:
     image: adminer
@@ -76,5 +60,5 @@ services:
 volumes:
   yt_graph:
     driver: local
-  test-yt_rec_graph:
+  test-yt_graph:
     driver: local
