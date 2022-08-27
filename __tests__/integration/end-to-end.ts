@@ -27,7 +27,7 @@ afterAll(async () => {
   log.close();
 });
 
-describe('the server abasic behaviour', () => {
+describe('End-to-end tests', () => {
   it('should get a URL to crawl from the server', async () => {
     const url = await api.getUrlToCrawl();
     expect(url.length).toBeGreaterThan(0);

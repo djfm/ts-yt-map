@@ -1,7 +1,10 @@
-version: "3.9"
+version: "4"
 services:
+  client:
+    build: ./docker/client
+
   server:
-    build: .
+    build: ./docker/server
     ports:
       - "38472:38472"
     depends_on:
@@ -13,14 +16,20 @@ services:
       - "38478:38478"
     depends_on:
       - postgres-test
+    environment:
+      - NODE_ENV=test-docker
+      - LOG=show
+    command: yarn server secret
 
-  client:
-    build: .
-
-  client-test:
-    build: .
+  tester:
+    build:
+      context: .
+      dockerfile: ./docker/tester/Dockerfile
     depends_on:
-      - postgres-test
+      - server-test
+    environment:
+      - NODE_ENV=test-docker
+      - LOG=show
 
   postgres:
     image: postgres
@@ -33,6 +42,8 @@ services:
       - "5432:5432"
     volumes:
       - yt_graph:/var/lib/postgresql/data
+      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
+      - ./my-pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
 
   postgres-test:
     image: postgres
@@ -45,6 +56,8 @@ services:
       - "5433:5432"
     volumes:
       - test-yt_rec_graph:/var/lib/postgresql/data
+      - ./my-postgres.conf:/etc/postgresql/postgresql.conf
+      - ./my-pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
 
   backup:
     build: ./backuper

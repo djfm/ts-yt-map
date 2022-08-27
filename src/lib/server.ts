@@ -33,8 +33,11 @@ export const startServer = async (
   cfg: ServerConfig, log: LoggerInterface,
 ): Promise<ServerHandle> => {
   const pg = new PgClient({
-    ...cfg.db,
+    host: cfg.db.host,
+    port: cfg.db.port,
     user: cfg.db.username,
+    password: cfg.db.password,
+    database: cfg.db.database,
   });
 
   try {

@@ -11,6 +11,7 @@ export class PageUtil {
   ) {}
 
   setWaitDelay = (ms: number): PageUtil => {
+    this.log.debug(`Setting wait delay to ${Math.round(ms)}ms`);
     this.waitDelay = ms;
     return this;
   };

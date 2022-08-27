@@ -105,3 +105,13 @@ If you wanna contribute your resources to our server feel free to spawn a client
 ```
 
 I will work on providing a read-only access to the database for those interested.
+
+## Random useful things
+
+```bash
+docker run -i --rm postgres cat /usr/share/postgresql/postgresql.conf.sample > my-postgres.conf
+```
+
+```bash
+docker compose run --rm postgres-test cat /var/lib/postgresql/data/pg_hba.conf > my-pg_hba.conf
+```

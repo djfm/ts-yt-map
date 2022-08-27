@@ -10,9 +10,10 @@
     "Kengo",
     "pageerror",
     "postgres",
+    "postgresql",
     "remoteip",
     "typeorm",
-    "vhosts",
+    "vhosts"
   ],
   "jest.jestCommandLine": "yarn test",
   "jest.autoRun": {

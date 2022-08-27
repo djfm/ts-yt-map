@@ -42,7 +42,7 @@ export class Scraper {
 
     try {
       const page = await browser.newPage();
-      const pageUtil = new PageUtil(this.log, page);
+      const pageUtil = new PageUtil(this.log, page).setWaitDelay(1000);
 
       const from = await this.scrapeVideo(pageUtil, videoURL, true);
       const to: ScrapedVideoData[] = [];
@@ -78,6 +78,7 @@ export class Scraper {
       if (attemptNumber < maxAttempts) {
         this.log.info(`Failed to scrape video URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
         this.log.error(e);
+        page.setWaitDelay(page.getWaitDelay() * 1.5);
         return this.scrapeVideo(
           page, url, acceptCookies,
           attemptNumber + 1, maxAttempts,
@@ -163,6 +164,8 @@ export class Scraper {
         this.log.info(`Failed to scrape channel URL: ${url}, attempt ${attemptNumber} of ${maxAttempts}`);
         return this.scrapeChannel(page, url, acceptCookies, attemptNumber + 1, maxAttempts);
       }
+
+      page.setWaitDelay(page.getWaitDelay() * 1.5);
       this.log.error(`Failed to scrape channel URL: ${url}`, { error: e });
       await page.takeScreenshot('channel_scrape_failure');
       throw e;
