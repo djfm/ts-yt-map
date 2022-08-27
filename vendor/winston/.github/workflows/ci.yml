@@ -1,0 +1,41 @@
+name: CI Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node:
+          - 12
+          - 14
+          - 16
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install Dependencies
+        run: npm clean-install
+      - name: Lint
+        run: npm run lint
+      - name: Integration Tests
+        run: npm run test:integration
+      - name: Test Coverage
+        run: npm run test:coverage
+      - name: Report test coverage to Coveralls.io
+        if: matrix.node == '16'
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: TypeScript Test
+        run: npx --package typescript tsc --project test
