@@ -1,3 +1,3 @@
 [submodule "winston"]
-	path = winston
+	path = ./vendor/winston 
 	url = git@github.com:djfm/winston.git
