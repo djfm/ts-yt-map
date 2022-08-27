@@ -127,7 +127,7 @@ export const loadChromeConfig = async (): Promise<ChromeConfig> => {
   return chromeConfig;
 };
 
-const getServerConfigFileName = (): string => {
+const getServerConfigFileName = async (): Promise<string> => {
   if (process.env.NODE_ENV === 'production') {
     return 'production.yaml';
   }
@@ -140,11 +140,17 @@ const getServerConfigFileName = (): string => {
     return 'production-docker.yaml';
   }
 
+  if (process.env.NODE_ENV !== 'test') {
+    const log = await createLogger();
+    log.error('Unknown NODE_ENV, defaulting to test.yaml');
+    log.close();
+  }
+
   return 'test.yaml';
 };
 
 export const loadServerConfig = async (serverPassword: string): Promise<ServerConfig> => {
-  const fname = getServerConfigFileName();
+  const fname = await getServerConfigFileName();
 
   const configPath = join(__dirname, '..', 'config', fname);
   const config = parseYAML(await readFile(configPath, 'utf8'));
