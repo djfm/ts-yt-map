@@ -17,9 +17,3 @@ WORKDIR /root/yt_rec_graph
 RUN yarn
 RUN npm install pm2 -g
 RUN pm2 install typescript
-ARG ROLE
-CMD if [ "$ROLE" -eq "TESTER" ]; then \
-  yarn jest; \
-else \
-  echo "to start a client use the dedicated script (role given: $ROLE)"; \
-fi
