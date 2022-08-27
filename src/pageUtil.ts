@@ -5,6 +5,8 @@ import { sleep } from './util';
 export class PageUtil {
   private waitDelay: number = 5000;
 
+  private maxWaitDelay: number = 5000;
+
   constructor(
     private readonly log: LoggerInterface,
     private readonly page: Page,
@@ -12,7 +14,11 @@ export class PageUtil {
 
   setWaitDelay = (ms: number): PageUtil => {
     this.log.debug(`Setting wait delay to ${Math.round(ms)}ms`);
-    this.waitDelay = ms;
+    if (ms < this.maxWaitDelay) {
+      this.waitDelay = ms;
+    } else {
+      this.waitDelay = this.maxWaitDelay;
+    }
     return this;
   };
 
