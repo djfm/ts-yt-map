@@ -5,8 +5,9 @@
     "noEmit": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "inlineSourceMap": true,
-    "target": "ES2022"
+    "sourceMap": true,
+    "target": "ES2022",
+    "moduleResolution": "node",
   },
   "exclude": ["**/*.js, node_modules"]
 }
