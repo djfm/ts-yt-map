@@ -253,10 +253,7 @@ export const startServer = async (
     }
   });
 
-  const server = app.listen(
-    // eslint-disable-next-line no-console
-    cfg.port, () => console.log(`Listening on port ${cfg.port}`, '0.0.0.0'),
-  );
+  app.post('/ping', (req, res) => res.json('pong'));
 
   app.post('/testing/resetTime', async (req, res) => {
     const dt = 1000 * 60 * 10 * 2;
@@ -278,6 +275,11 @@ export const startServer = async (
 
     res.json({ queries });
   });
+
+  const server = app.listen(
+    // eslint-disable-next-line no-console
+    cfg.port, '0.0.0.0', () => console.log(`Listening on port ${cfg.port}`, '0.0.0.0'),
+  );
 
   return {
     pg,

@@ -9,6 +9,23 @@ export class API {
     private readonly password: string,
   ) {}
 
+  public async ping(): Promise<'pong'> {
+    const res = await fetch(`${this.url}/ping`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-password': this.password,
+      },
+    });
+
+    if (res.ok) {
+      return res.json();
+    }
+
+    this.log.error(res.statusText, { res });
+    throw new Error('Failed to ping');
+  }
+
   public async getUrlToCrawl(): Promise<string> {
     let urlResp: Response;
 
@@ -72,7 +89,7 @@ export class API {
     throw new Error('Failed to reset timing');
   }
 
-  public async forTestingClearDb(): Promise<string[]> {
+  public async forTestingClearDb(): Promise<{ queries: string[] }> {
     const res = await fetch(`${this.url}/testing/clearDb`, {
       method: 'POST',
       headers: {
