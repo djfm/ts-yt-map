@@ -74,7 +74,7 @@ export const startServer = async (
       countingVideosAskedSince = Date.now();
     }
 
-    const v = await ds.transaction(async (tm): Promise<URLResp> => {
+    const v = await ds.transaction(async (tm: EntityManager): Promise<URLResp> => {
       const url = await tm.findOneBy(Video, {
         crawled: false,
         crawlAttemptCount: LessThan(3),
