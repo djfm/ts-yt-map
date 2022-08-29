@@ -61,6 +61,7 @@ export const startServer = async (
 
   await ds.initialize();
   const channelRepo = ds.getRepository(Channel);
+  const videoRepo = ds.getRepository(Video);
 
   let countingVideosAskedSince = Date.now();
 
@@ -71,26 +72,23 @@ export const startServer = async (
       countingVideosAskedSince = Date.now();
     }
 
-    const v = await ds.transaction(async (tm): Promise<URLResp> => {
-      const url = await tm.findOneBy(Video, {
-        crawled: false,
-        crawlAttemptCount: LessThan(3),
-        latestCrawlAttemptedAt: LessThan(new Date()),
-      });
+    const v = await videoRepo.query(`
+        UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
+        WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval) AND crawl_attempt_count < 3 AND crawled = false)
+        RETURNING url
+    `);
 
-      if (!url) {
-        if (new Date().getTime() - seedVideoSentAt.getTime() > 1000000 * 10 * 60) {
-          seedVideoSentAt = new Date();
-          return { ok: true, url: cfg.seed_video };
-        }
-
-        return { ok: false };
+    if (v[1] === 0) {
+      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10 * 60) {
+        seedVideoSentAt = new Date();
+        const url = cfg.seedVideo;
+        return { ok: true, url };
       }
+    } else if (v[1] === 1) {
+      return { ok: true, url: v[0].url };
+    }
 
-      return { ok: false };
-    });
-
-    return v;
+    return { ok: false };
   };
 
   const saveChannelAndGetId = async (

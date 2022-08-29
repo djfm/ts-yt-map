@@ -57,7 +57,7 @@ export class ServerConfig {
   public db = new DbConfig();
 
   @Length(1, 255)
-  public seed_video = '';
+  public seedVideo = '';
 
   constructor(config: Record<string, unknown>) {
     Object.assign(this, config);
