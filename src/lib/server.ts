@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource, EntityManager, Repository, LessThan } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
@@ -80,14 +80,15 @@ export const startServer = async (
 
     if (v[1] === 0) {
       if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10 * 60) {
-        seedVideoSentAt = new Date();
-        const url = cfg.seedVideo;
-        return { ok: true, url };
+        if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10 * 60) {
+          seedVideoSentAt = new Date();
+          const url = cfg.seedVideo;
+          return { ok: true, url };
+        }
+      } else if (v[1] === 1) {
+        return { ok: true, url: v[0].url };
       }
-    } else if (v[1] === 1) {
-      return { ok: true, url: v[0].url };
     }
-
     return { ok: false };
   };
 
