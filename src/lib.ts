@@ -1,42 +1,15 @@
 import { join } from 'path';
-import { readFile, mkdir } from 'fs/promises';
+import { readFile } from 'fs/promises';
 
 import { parse as parseYAML } from 'yaml';
-import winston, { format } from 'winston';
 import { validate, Length, Min, Max } from 'class-validator';
 import { ChromeConfig } from './browser';
+// eslint-disable-next-line
+import { Logger, FileTransport, ConsoleTransport } from '../vendor/loggah/src';
 
 export {
   Browser,
 } from './browser';
-
-export interface LogMethod {
-  (message: string, ...meta: unknown[]): unknown;
-  (message: unknown): unknown;
-  (infoObject: object): unknown;
-}
-
-export interface LoggerInterface {
-  error: LogMethod;
-  info: LogMethod;
-  debug: LogMethod;
-  close: () => void;
-  getRootDirectory(): string;
-}
-
-/**
- * Available log levels.
- *
- *  const levels = {
- *    error: 0, // most serious
- *    warn: 1,
- *    info: 2,
- *    http: 3,
- *    verbose: 4,
- *    debug: 5,
- *    silly: 6 // least serious
- *  };
- */
 
 class DbConfig {
   @Length(1, 255)
@@ -77,46 +50,14 @@ export class ServerConfig {
   }
 }
 
-const { colorize, combine, timestamp, label, prettyPrint, json } = format;
-
 const logDir = new Date().toISOString();
 
-export const createLogger = async (): Promise<LoggerInterface> => {
+export const createLogger = async (): Promise<Logger> => {
   const logRoot = join(__dirname, '..', 'logs', logDir);
-  await mkdir(logRoot, { recursive: true });
-
-  const log = winston.createLogger({
-    level: 'info',
-    format: combine(
-      label({ label: 'ts_yt_map' }),
-      timestamp(),
-      prettyPrint(),
-      json(),
-    ),
-    defaultMeta: { service: 'ts_yt_map' },
-    transports:
-      ['error', 'combined'].map((level) => (
-        new winston.transports.File({
-          filename: `${logRoot}/${level}.log`, level: level === 'combined' ? undefined : level,
-        })
-      )),
-  });
-
-  if (process.env.LOG === 'show') {
-    const consoleFormat = format.printf((msg) => `${msg.level.padEnd(17)} [${msg.label}] [${msg.timestamp}] :: ${msg.message}`);
-
-    log.add(new winston.transports.Console({
-      format: combine(
-        colorize({ all: true }),
-        consoleFormat,
-      ),
-      level: 'debug',
-    }));
-  }
-
-  (log as unknown as LoggerInterface).getRootDirectory = () => logRoot;
-
-  return log as unknown as LoggerInterface;
+  const log = new Logger();
+  log.addTransport(new ConsoleTransport());
+  log.addTransport(new FileTransport(join(logRoot, 'combined.log')));
+  return log;
 };
 
 export const loadChromeConfig = async (): Promise<ChromeConfig> => {

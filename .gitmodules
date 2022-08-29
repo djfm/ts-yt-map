@@ -1,0 +1,3 @@
+[submodule "vendor/loggah"]
+	path = vendor/loggah
+	url = git@github.com:djfm/loggah.git
