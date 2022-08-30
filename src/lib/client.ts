@@ -9,7 +9,18 @@ export class Client {
     const url = await this.api.getUrlToCrawl();
     const scraper = new Scraper(this.log);
     const scraped = await scraper.scrapeRecommendations(url);
-    return this.api.saveRecommendations(scraped);
+    let tries = 3;
+    try {
+      return this.api.saveRecommendations(scraped);
+    } catch (e) {
+      this.log.error(`Failed to save recommendations for URL: ${url}, retrying`, { error: e });
+      if (tries > 0) {
+        tries -= 1;
+        return this.api.saveRecommendations(scraped);
+      }
+      this.log.error(`Failed to save recommendations for URL: ${url}`, { error: e });
+      throw e;
+    }
   }
 }
 
