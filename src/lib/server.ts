@@ -207,6 +207,14 @@ export const startServer = async (
     }
   });
 
+  app.post(POSTResetTimingForTesting, (req, res) => {
+    countingRecommendationsSince = Date.now();
+    seedVideoSentAt = new Date(0);
+    recommendationsSaved = 0;
+    countingVideosAskedSince = 0;
+    res.status(200).json({ ok: true });
+  });
+
   app.post(POSTRecommendation, async (req, res) => {
     const data = new ScrapedRecommendation(req.body.from, req.body.to);
     const errors = await validate(data);
@@ -255,7 +263,7 @@ export const startServer = async (
             try {
               return await transaction.save(recommendation);
             } catch (e) {
-              log.error(`Failed to save recommendation from ${from.id} to ${to.id}`, { e });
+              log.error(`Failed to save recommendation from ${from.id} to ${to.id}: ${asError(e).message}`, { e });
               throw e;
             }
           });
@@ -279,18 +287,6 @@ export const startServer = async (
 
         res.json({ ok: true, count: data.to.length });
       });
-
-      app.post(POSTResetTimingForTesting, (req, res) => {
-        countingRecommendationsSince = Date.now();
-        seedVideoSentAt = new Date(0);
-        recommendationsSaved = 0;
-        countingVideosAskedSince = 0;
-        res.status(200).json({ ok: true });
-      });
-
-      log.info(await ds.query('select count(*) from recommendation'));
-
-      res.json({ ok: true, count: data.to.length });
     } catch (error) {
       const { message } = asError(error);
       log.error(`Could not save recommendations: ${message}`, { error });
