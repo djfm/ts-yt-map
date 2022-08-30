@@ -5,14 +5,14 @@ export const convertNumber = (str: string): number => {
   const expanded = str.replace(/,/g, '');
 
   if (expanded.endsWith('K')) {
-    return +expanded.slice(0, -1) * 1000;
+    return Math.round(+expanded.slice(0, -1) * 1000);
   }
 
   if (expanded.endsWith('M')) {
-    return +expanded.slice(0, -1) * 1000000;
+    return Math.round(+expanded.slice(0, -1) * 1000000);
   }
 
-  return +expanded;
+  return Math.round(+expanded);
 };
 
 export const sleep = (ms: number): Promise<void> =>

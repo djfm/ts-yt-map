@@ -1,6 +1,7 @@
 import fetch, { Response } from 'node-fetch';
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
+import { POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 
 export class API {
   constructor(
@@ -13,7 +14,7 @@ export class API {
     let urlResp: Response;
 
     try {
-      urlResp = await fetch(`${this.url}/video/get-url-to-crawl`, {
+      urlResp = await fetch(`${this.url}${POSTGetUrlToCrawl}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ export class API {
   public async saveRecommendations(
     recoData: ScrapedRecommendationData,
   ): Promise<{ok: boolean, count: number}> {
-    const res = await fetch(`${this.url}/recommendation`, {
+    const res = await fetch(`${this.url}${POSTRecommendation}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -51,12 +52,12 @@ export class API {
       return res.json();
     }
 
-    this.log.error(res);
+    this.log.error(res.statusText, { res });
     throw new Error('Failed to save recommendations');
   }
 
   public async forTestingResetTiming(): Promise<void> {
-    const res = await fetch(`${this.url}/reset-timing`, {
+    const res = await fetch(`${this.url}${POSTGetUrlToCrawl}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -72,8 +73,8 @@ export class API {
     throw new Error('Failed to reset timing');
   }
 
-  public async forTestingClearDb(): Promise<string[]> {
-    const res = await fetch(`${this.url}/testing/clearDb`, {
+  public async forTestingClearDb(): Promise<{queries: string[]}> {
+    const res = await fetch(`${this.url}${POSTClearDbForTesting}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

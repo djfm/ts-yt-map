@@ -57,7 +57,7 @@ export class ServerConfig {
   public db = new DbConfig();
 
   @Length(1, 255)
-  public seedVideo = '';
+  public seed_video = '';
 
   constructor(config: Record<string, unknown>) {
     Object.assign(this, config);
@@ -75,6 +75,7 @@ export const createLogger = async (): Promise<LoggerInterface> => {
       target: 'pino-pretty',
       options: {
         colorize: true,
+        minimumLevel: 'debug',
       },
     },
   });

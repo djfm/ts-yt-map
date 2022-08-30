@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, LessThan, Repository } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
@@ -11,6 +11,7 @@ import { Channel, ScrapedChannelData } from '../channel';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendation } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
+import { POSTGetUrlToCrawl, POSTRecommendation, POSTResetTimingForTesting, POSTClearDbForTesting } from '../endpoints/v1';
 
 export interface ServerHandle {
   close: () => Promise<void>,
@@ -67,10 +68,12 @@ export const startServer = async (
 
   type URLResp = { ok: true, url: string } | { ok: false };
 
-  const getVideoToCrawl = async (): Promise<URLResp> => {
+  const getVideoToCrawlOld = async (): Promise<URLResp> => {
     if (Date.now() - countingVideosAskedSince > 1000 * 10 * 60) {
       countingVideosAskedSince = Date.now();
     }
+
+    log.debug('Getting video to crawl, checking if there is one in database...');
 
     const v = await videoRepo.query(`
         UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
@@ -79,17 +82,47 @@ export const startServer = async (
     `);
 
     if (v[1] === 0) {
+      log.debug('No video to crawl found from server...');
       if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10 * 60) {
-        if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10 * 60) {
-          seedVideoSentAt = new Date();
-          const url = cfg.seedVideo;
-          return { ok: true, url };
-        }
-      } else if (v[1] === 1) {
-        return { ok: true, url: v[0].url };
+        seedVideoSentAt = new Date();
+        const url = cfg.seed_video;
+        log.debug('Sending seed video to client...', { url });
+        return { ok: true, url };
       }
+
+      log.debug('Seed video already sent to client recently...');
     }
+
+    if (v[1] === 1) {
+      const { url } = v[0][0];
+      return { ok: true, url };
+    }
+
     return { ok: false };
+  };
+
+  const getVideoToCrawl = async (): Promise<URLResp> => {
+    const resp = await ds.transaction(async (manager: EntityManager): Promise<URLResp> => {
+      const video = await manager.findOne(Video, {
+        where: {
+          crawled: false,
+          crawlAttemptCount: LessThan(4),
+          latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
+        },
+        order: { id: 'ASC' },
+      });
+
+      if (video) {
+        video.latestCrawlAttemptedAt = new Date();
+        video.crawlAttemptCount += 1;
+        await manager.save(video);
+        return { ok: true, url: video.url };
+      }
+
+      return { ok: true, url: cfg.seed_video };
+    });
+
+    return resp;
   };
 
   const saveChannelAndGetId = async (
@@ -159,7 +192,8 @@ export const startServer = async (
     next();
   });
 
-  app.post('/video/get-url-to-crawl', async (req, res) => {
+  app.post(POSTGetUrlToCrawl, async (req, res) => {
+    log.debug('Getting video to crawl...');
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     req.setTimeout(1000 * 5);
     const u = await getVideoToCrawl();
@@ -173,7 +207,7 @@ export const startServer = async (
     }
   });
 
-  app.post('/recommendation', async (req, res) => {
+  app.post(POSTRecommendation, async (req, res) => {
     const data = new ScrapedRecommendation(req.body.from, req.body.to);
     const errors = await validate(data);
     if (errors.length > 0) {
@@ -218,7 +252,12 @@ export const startServer = async (
             recommendation.createdAt = new Date();
             recommendation.updatedAt = new Date();
             recommendation.rank = +rank;
-            return transaction.save(recommendation);
+            try {
+              return await transaction.save(recommendation);
+            } catch (e) {
+              log.error(`Failed to save recommendation from ${from.id} to ${to.id}`, { e });
+              throw e;
+            }
           });
 
         await Promise.all(saves);
@@ -237,6 +276,16 @@ export const startServer = async (
             recommendationsSaved = 0;
           }
         }
+
+        res.json({ ok: true, count: data.to.length });
+      });
+
+      app.post(POSTResetTimingForTesting, (req, res) => {
+        countingRecommendationsSince = Date.now();
+        seedVideoSentAt = new Date(0);
+        recommendationsSaved = 0;
+        countingVideosAskedSince = 0;
+        res.status(200).json({ ok: true });
       });
 
       log.info(await ds.query('select count(*) from recommendation'));
@@ -251,17 +300,16 @@ export const startServer = async (
 
   const server = app.listen(
     // eslint-disable-next-line no-console
-    cfg.port, () => console.log(`Listening on port ${cfg.port}`, '0.0.0.0'),
+    cfg.port, '0.0.0.0', () => log.info(`Listening on port ${cfg.port}`, '0.0.0.0'),
   );
 
-  app.post('/testing/resetTime', async (req, res) => {
-    const dt = 1000 * 60 * 10 * 2;
-    countingVideosAskedSince = -dt;
+  app.post(POSTResetTimingForTesting, async (req, res) => {
+    countingVideosAskedSince = 0;
     seedVideoSentAt = new Date(0);
-    res.json({ ok: true });
+    res.status(200).json({ ok: true });
   });
 
-  app.post('/testing/clearDb', async (req, res) => {
+  app.post(POSTClearDbForTesting, async (req, res) => {
     const queries = [
       'truncate recommendation cascade',
       'truncate video cascade',

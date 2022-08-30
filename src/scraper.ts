@@ -8,9 +8,7 @@ export class ScrapedRecommendationData {
   constructor(
     public from: ScrapedVideoData,
     public to: ScrapedVideoData[],
-  ) {
-    this.from = new Video(from);
-  }
+  ) {}
 }
 
 export class ScrapedRecommendation {
