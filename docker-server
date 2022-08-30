@@ -7,6 +7,6 @@ if [ -z "$password" ]; then
     exit 1
 fi
 
-yarn pm2 start src/bin/server.ts -- "$password"
+node_modules/.bin/pm2 start src/bin/server.ts -- "$password"
 
-yarn pm2 logs --raw
+node_modules/.bin/pm2 logs --raw

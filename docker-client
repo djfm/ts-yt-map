@@ -21,7 +21,7 @@ echo "Running $concurrency clients against $server"
 
 for i in $(seq 1 "$concurrency"); do
   echo "Running client $i"
-  yarn pm2 start -f src/bin/client.ts -- "$server" "$password"
+  node_modules/.bin/pm2 start -f src/bin/client.ts -- "$server" "$password"
 done
 
-yarn pm2 logs --raw
+node_modules/.bin/pm2 logs --raw
