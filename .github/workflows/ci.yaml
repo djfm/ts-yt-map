@@ -3,15 +3,11 @@ on: [push, pull_request]
 jobs:
   ci:
       name: Continuous Integration
-      runs-on: ubuntu-latest
+      runs-on: centminmod/docker-ubuntu-vnc-desktop
       steps:
-        - name: Check connectivity
-          run: curl https://www.youtube.com/watch?v=QOngA8bBbkg
         - name: Check out the repo
           uses: actions/checkout@v3
-        - name: Install Docker
-          run: /.setup-ubuntu
         - name: Start the test database container
           run: docker compose up -d postgres-test
-        - name: Run the tests with Docker
+        - name: Run the tests
           run: ./test
