@@ -90,9 +90,9 @@ export const startServer = async (
   };
 
   const saveChannelAndGetId = async (
-    repo: Repository<Channel>, channel: ScrapedChannelData,
+    repo: EntityManager, channel: ScrapedChannelData,
   ): Promise<number> => {
-    const currentChannel = await repo.findOneBy({
+    const currentChannel = await repo.findOneBy(Channel, {
       youtubeId: channel.youtubeId,
     });
 
@@ -112,13 +112,13 @@ export const startServer = async (
   };
 
   const saveVideo = async (
-    repo: Repository<Video>, channelRepo: Repository<Channel>, video: ScrapedVideoData,
+    em: EntityManager, video: ScrapedVideoData,
   ): Promise<Video> => {
     if (!video.channel) {
       throw new Error('Video must have a channel');
     }
 
-    const channelId = await saveChannelAndGetId(channelRepo, video.channel);
+    const channelId = await saveChannelAndGetId(em, video.channel);
 
     const videoEntity = new Video(video);
     videoEntity.channelId = channelId;
@@ -129,13 +129,13 @@ export const startServer = async (
       throw new Error(msg);
     }
 
-    const saved = await repo.findOneBy({ url: videoEntity.url });
+    const saved = await em.findOneBy(Video, { url: videoEntity.url });
 
     if (saved) {
       return saved;
     }
 
-    const newVideo = await repo.save(videoEntity);
+    const newVideo = await em.save(videoEntity);
     return newVideo;
   };
 
@@ -205,15 +205,15 @@ export const startServer = async (
         }
       }
 
-      await ds.manager.transaction(async (transaction: EntityManager) => {
-        const from = await saveVideo(videoRepo, channelRepo, data.from);
+      await ds.manager.transaction(async (em: EntityManager) => {
+        const from = await saveVideo(em, data.from);
 
         from.crawled = true;
 
         const saves = Object.entries(data.to)
           .map(async ([rank, video]): Promise<Recommendation> => {
           // eslint-disable-next-line no-await-in-loop
-            const to = await saveVideo(videoRepo, channelRepo, video);
+            const to = await saveVideo(em, video);
 
             log.info(`Saving recommendation from ${from.id} to ${to.id}`);
 
@@ -224,7 +224,7 @@ export const startServer = async (
             recommendation.updatedAt = new Date();
             recommendation.rank = +rank;
             try {
-              return await transaction.save(recommendation);
+              return await em.save(recommendation);
             } catch (e) {
               log.error(`Failed to save recommendation from ${from.id} to ${to.id}: ${asError(e).message}`, { e });
               throw e;
@@ -232,7 +232,7 @@ export const startServer = async (
           });
 
         await Promise.all(saves);
-        await transaction.save(from);
+        await em.save(from);
 
         recommendationsSaved += data.to.length;
         const elapsed = (Date.now() - countingRecommendationsSince) / 1000 / 60;
