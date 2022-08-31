@@ -7,6 +7,8 @@ if [ -z "$password" ]; then
     exit 1
 fi
 
+export PATH=/root/yt_rec_graph/node_modules/.bin/pm2:$PATH
+
 node_modules/.bin/pm2 start src/bin/server.ts -- "$password"
 
 node_modules/.bin/pm2 logs --raw
