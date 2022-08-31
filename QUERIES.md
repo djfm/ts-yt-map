@@ -22,6 +22,12 @@ later:
 | ---------| ------|
 | 5129     | 5443  |
 
+later:
+
+| num_from | num_to|
+| ---------| ------|
+| 42410    | 43839 |
+
 Does it mean the recommendations form a circle?
 ## Statistics
 ### How many videos have we discovered?
