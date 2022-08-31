@@ -31,10 +31,10 @@ systemctl --user start docker
 systemctl --user enable docker
 sudo loginctl enable-linger "$(whoami)"
 
-sudo apt install git tmux -y
-git clone https://github.com/djfm/ts-yt-map.git
+#sudo apt install git tmux -y
+#git clone https://github.com/djfm/ts-yt-map.git
 
-ssh-copy-id djfm@socks.fmdj.fr
+#ssh-copy-id djfm@socks.fmdj.fr
 
 # Run in tmux:
 # cd ts-yt-map && ./client https://yt.fmdj.fr tralala 16

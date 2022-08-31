@@ -9,5 +9,9 @@ jobs:
           run: curl https://www.youtube.com/watch?v=QOngA8bBbkg
         - name: Check out the repo
           uses: actions/checkout@v3
+        - name: Install Docker
+          run: /.setup-ubuntu
+        - name: Start the test database container
+          run: docker compose up -d postgres-test
         - name: Run the tests with Docker
-          run: bash test
+          run: ./test
