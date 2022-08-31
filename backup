@@ -8,7 +8,7 @@ if [ -z "$target" ]; then
 fi
 
 #create output file from target with curreht date as suffix
-output="${target}_$(date +%Y-%m-%d).tar.gz"
+output="${target}_$(date +%Y-%m-%d).sql"
 
 echo "Dumping database to $output..."
 
