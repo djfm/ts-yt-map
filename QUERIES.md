@@ -39,10 +39,12 @@ select count(*) from video
 
 ```sql
 select (100 * (select count(*) from video where crawled = true))
-  / (select count(*) from video)
+  / (select count(*) from video) as percent_of_discovered_crawled
 ```
 
-Yields `22%` at the tine of writing (August 13, 2022, 19:26 GMT+2).
+Yields `22%` on August 13, 2022, 19:26 GMT+2.
+
+Yields `24%` on August 31, 2022, 22:19 GMT+2.
 ## Sanity checks
 ### Are all the videos unique?
 
@@ -51,9 +53,9 @@ select (select count(distinct url) from video)
   - (select count(url) from video)
 ```
 
-This is `0` as expected, because it is enforces by the code.
+This is `0` as expected, because it is enforced by the code.
 
-TODO: add am index to enforce uniqueness.
+TODO: add an index to enforce uniqueness.
 ### Do all crawled videos have 10 recommendations?
 
 ```sql
@@ -64,4 +66,14 @@ having count(to_id) > 10
 order by count(to_id) desc
 LIMIT 50
 ```
-TODO: this should return no results, but it doesn't, there ie q problem.
+TODO: this should return no results, but it doesn't, there is a problem.
+
+### Number of videos recommending more than 10 videos
+
+```sql
+select count(distinct s.from_id) from (select from_id, count(to_id)
+from recommendation
+group by from_id
+having count(to_id) > 10
+order by count(to_id) desc) s
+```
