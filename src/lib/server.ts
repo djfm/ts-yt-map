@@ -109,7 +109,7 @@ export const startServer = async (
           crawlAttemptCount: LessThan(4),
           latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
         },
-        order: { id: 'ASC' },
+        order: { url: 'ASC' },
       });
 
       if (video) {
@@ -139,9 +139,9 @@ export const startServer = async (
     const newChannel = new Channel(channel);
     const newChannelErrors = await validate(newChannel);
     if (newChannelErrors.length > 0) {
-      const msg = newChannelErrors.map((e) => e.constraints).join(', ');
-      log.error(`Failed to save channel: ${msg}`, { newChannelErrors });
-      throw new Error(msg);
+      log.error('Failed to save channel');
+      log.error(newChannelErrors);
+      throw new Error('Failed to save channel');
     }
     const savedChannel = await repo.save(newChannel);
     return savedChannel.id;
