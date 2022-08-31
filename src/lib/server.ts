@@ -62,44 +62,8 @@ export const startServer = async (
 
   await ds.initialize();
   const channelRepo = ds.getRepository(Channel);
-  const videoRepo = ds.getRepository(Video);
-
-  let countingVideosAskedSince = Date.now();
 
   type URLResp = { ok: true, url: string } | { ok: false };
-
-  const getVideoToCrawlOld = async (): Promise<URLResp> => {
-    if (Date.now() - countingVideosAskedSince > 1000 * 10 * 60) {
-      countingVideosAskedSince = Date.now();
-    }
-
-    log.debug('Getting video to crawl, checking if there is one in database...');
-
-    const v = await videoRepo.query(`
-        UPDATE video set latest_crawl_attempted_at = now(), crawl_attempt_count = crawl_attempt_count + 1
-        WHERE id = (SELECT min(id) FROM video WHERE (now() - latest_crawl_attempted_at > '10 minutes'::interval) AND crawl_attempt_count < 3 AND crawled = false)
-        RETURNING url
-    `);
-
-    if (v[1] === 0) {
-      log.debug('No video to crawl found from server...');
-      if (new Date().getTime() - seedVideoSentAt.getTime() > 1000 * 10 * 60) {
-        seedVideoSentAt = new Date();
-        const url = cfg.seed_video;
-        log.debug('Sending seed video to client...', { url });
-        return { ok: true, url };
-      }
-
-      log.debug('Seed video already sent to client recently...');
-    }
-
-    if (v[1] === 1) {
-      const { url } = v[0][0];
-      return { ok: true, url };
-    }
-
-    return { ok: false };
-  };
 
   const getVideoToCrawl = async (): Promise<URLResp> => {
     const resp = await ds.transaction(async (manager: EntityManager): Promise<URLResp> => {
@@ -211,7 +175,6 @@ export const startServer = async (
     countingRecommendationsSince = Date.now();
     seedVideoSentAt = new Date(0);
     recommendationsSaved = 0;
-    countingVideosAskedSince = 0;
     res.status(200).json({ ok: true });
   });
 
@@ -301,7 +264,6 @@ export const startServer = async (
   );
 
   app.post(POSTResetTimingForTesting, async (req, res) => {
-    countingVideosAskedSince = 0;
     seedVideoSentAt = new Date(0);
     res.status(200).json({ ok: true });
   });
