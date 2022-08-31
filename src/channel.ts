@@ -58,7 +58,6 @@ export class ScrapedChannelData {
   public rawSubscriberCount: string = '';
 
   @Column()
-  @Length(1)
   public description: string = '';
 }
 
