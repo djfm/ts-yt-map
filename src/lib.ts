@@ -79,7 +79,7 @@ export const createLogger = async (): Promise<LoggerInterface> => {
     },
   });
 
-  logger.level = 'info';
+  logger.level = 'debug';
 
   return Object.assign(logger, {
     getRootDirectory: () => logRoot,
