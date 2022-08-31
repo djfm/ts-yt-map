@@ -75,10 +75,11 @@ export const createLogger = async (): Promise<LoggerInterface> => {
       target: 'pino-pretty',
       options: {
         colorize: true,
-        minimumLevel: 'debug',
       },
     },
   });
+
+  logger.level = 'info';
 
   return Object.assign(logger, {
     getRootDirectory: () => logRoot,
