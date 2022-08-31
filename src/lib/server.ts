@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource, EntityManager, LessThan, Repository } from 'typeorm';
+import { DataSource, EntityManager, LessThan } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
@@ -24,8 +24,6 @@ const asError = (e: unknown):Error => {
   }
   return new Error('Unknown error');
 };
-
-let seedVideoSentAt = new Date(0);
 
 let countingRecommendationsSince = Date.now();
 let recommendationsSaved = 0;
@@ -61,25 +59,22 @@ export const startServer = async (
   });
 
   await ds.initialize();
-  const channelRepo = ds.getRepository(Channel);
 
   type URLResp = { ok: true, url: string } | { ok: false };
 
   const getVideoToCrawl = async (): Promise<URLResp> => {
-    const resp = await ds.transaction(async (manager: EntityManager): Promise<URLResp> => {
-      const video = await manager.findOne(Video, {
-        where: {
-          crawled: false,
-          crawlAttemptCount: LessThan(4),
-          latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
-        },
-        order: { url: 'ASC' },
-      });
+    const resp = await ds.transaction(async (em: EntityManager): Promise<URLResp> => {
+      const video = await em.createQueryBuilder()
+        .select()
+        .from(Video, 'video')
+        .where("crawled = false AND crawl_attempt_count < 3 AND now() - latest_crawl_attempted_at > '10 minutes'::interval")
+        .orderBy('random()')
+        .getOne();
 
       if (video) {
         video.latestCrawlAttemptedAt = new Date();
         video.crawlAttemptCount += 1;
-        await manager.save(video);
+        await em.save(video);
         return { ok: true, url: video.url };
       }
 
@@ -173,7 +168,6 @@ export const startServer = async (
 
   app.post(POSTResetTimingForTesting, (req, res) => {
     countingRecommendationsSince = Date.now();
-    seedVideoSentAt = new Date(0);
     recommendationsSaved = 0;
     res.status(200).json({ ok: true });
   });
@@ -264,7 +258,6 @@ export const startServer = async (
   );
 
   app.post(POSTResetTimingForTesting, async (req, res) => {
-    seedVideoSentAt = new Date(0);
     res.status(200).json({ ok: true });
   });
 
