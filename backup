@@ -7,6 +7,11 @@ if [ -z "$target" ]; then
     exit 1
 fi
 
-# Backup script for the server
+#create output file from target with curreht date as suffix
+output="${target}_$(date +%Y-%m-%d).tar.gz"
+
+echo "Dumping database to $output..."
+
+#Backup script for the server
 docker compose up backup --build --remove-orphans
-docker compose run --rm backup sh -c 'PGPASSFILE=.pgpass pg_dump -U postgres -h postgres yt_rec_graph' > "$target"
+docker compose run --rm backup sh -c 'PGPASSFILE=.pgpass pg_dump -U postgres -h postgres yt_rec_graph' > "$output"
