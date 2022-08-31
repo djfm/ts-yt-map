@@ -290,6 +290,7 @@ export const startServer = async (
     } catch (error) {
       const { message } = asError(error);
       log.error(`Could not save recommendations: ${message}`, { error });
+      log.error(error);
       res.status(500).send({ ok: false, message });
     }
   });
