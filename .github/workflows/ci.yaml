@@ -8,7 +8,7 @@ jobs:
         - name: Check out the repo
           uses: actions/checkout@v3
         - name: Install docker
-          run: bash setup-ubuntu
+          run: bash setup-ubuntu-docker-root
         - name: Start the test database container
           run: docker compose up -d postgres-test
         - name: Run the tests
