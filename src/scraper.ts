@@ -24,6 +24,8 @@ export class ScrapedRecommendation {
 export class Scraper {
   constructor(private readonly log: LoggerInterface) {}
 
+  private channelCache: Map<string, ScrapedChannelData> = new Map();
+
   async scrapeRecommendations(videoURL: string): Promise<ScrapedRecommendationData> {
     try {
       return await this.try_scrapeRecommendations(videoURL);
@@ -38,6 +40,11 @@ export class Scraper {
     const cfg = await loadChromeConfig();
     const browser = await Browser.launch(cfg);
 
+    if (this.channelCache.size > 100) {
+      this.log.info('Clearing channel cache');
+      this.channelCache.clear();
+    }
+
     try {
       const page = await browser.newPage();
       const pageUtil = new PageUtil(this.log, page);
@@ -45,15 +52,13 @@ export class Scraper {
       const from = await this.scrapeVideo(pageUtil, videoURL, true);
       const to: ScrapedVideoData[] = [];
 
-      const channelCache = new Map<string, ScrapedChannelData>();
-
       for (let i = 0; i < from.recommendationURLs.length && i < 10; i += 1) {
         this.log.info(`Scraping recommendation ${i + 1} of ${Math.min(from.recommendationURLs.length, 10)}...`);
         const url = from.recommendationURLs[i];
         // eslint-disable-next-line no-await-in-loop
-        const video = await this.scrapeVideo(pageUtil, url, false, 1, 3, channelCache);
+        const video = await this.scrapeVideo(pageUtil, url, false, 1, 3, this.channelCache);
         if (video.channel) {
-          channelCache.set(video.channelURL, video.channel);
+          this.channelCache.set(video.channelURL, video.channel);
         }
         to.push(video);
       }
