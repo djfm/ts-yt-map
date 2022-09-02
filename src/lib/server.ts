@@ -1,6 +1,6 @@
 import { Client as PgClient } from 'pg';
 import { migrate } from 'postgres-migrations';
-import { DataSource, EntityManager, LessThan, Repository } from 'typeorm';
+import { DataSource, EntityManager, LessThan } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
@@ -24,8 +24,6 @@ const asError = (e: unknown):Error => {
   }
   return new Error('Unknown error');
 };
-
-let seedVideoSentAt = new Date(0);
 
 let countingRecommendationsSince = Date.now();
 let recommendationsSaved = 0;
@@ -61,7 +59,6 @@ export const startServer = async (
   });
 
   await ds.initialize();
-  const channelRepo = ds.getRepository(Channel);
 
   type URLResp = { ok: true, url: string } | { ok: false };
 
