@@ -14,4 +14,4 @@ echo "Dumping database to $output..."
 
 #Backup script for the server
 docker compose up backup --build --remove-orphans
-docker compose run --rm backup sh -c 'PGPASSFILE=.pgpass pg_dump -U postgres -h postgres yt_rec_graph' > "$output"
+docker compose run --rm backup sh -c 'pg_dump -U postgres -h postgres yt_rec_graph' > "$output"
