@@ -4,7 +4,7 @@ import {
 
 export class Client {
   @Min(1)
-  public id: number = -1;
+  public id: number = 0;
 
   @Length(1, 255)
   public ip: string = '';

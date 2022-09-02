@@ -11,4 +11,6 @@ create unique index idx_name on Client (name);
 
 insert into Client (ip, name) values ('192.168.0.254','fm@paris');
 
-alter table Recommendation add column cliennt_id integer null references Client(id) on delete cascade;
+select id from Client where name = 'fm@paris' into @clientId;
+
+alter table recommendation add column client_id integer null references Client(id) on delete cascade;
