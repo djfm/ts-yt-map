@@ -56,23 +56,6 @@ export class API {
     throw new Error('Failed to save recommendations');
   }
 
-  public async forTestingResetTiming(): Promise<void> {
-    const res = await fetch(`${this.url}${POSTGetUrlToCrawl}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-    });
-
-    if (res.ok) {
-      return;
-    }
-
-    this.log.error(res.statusText, { res });
-    throw new Error('Failed to reset timing');
-  }
-
   public async forTestingClearDb(): Promise<{queries: string[]}> {
     const res = await fetch(`${this.url}${POSTClearDbForTesting}`, {
       method: 'POST',

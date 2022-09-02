@@ -40,8 +40,6 @@ describe('the server basic behaviour', () => {
   });
 
   it('should scrape one video and its recommendations', async () => {
-    api.forTestingResetTiming();
-
     const resp = await client.scrapeOneVideoAndItsRecommendations();
     expect(resp.ok).toBe(true);
     expect(resp.count).toBe(10);

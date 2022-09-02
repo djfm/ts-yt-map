@@ -170,7 +170,6 @@ export const startServer = async (
 
   app.post(POSTResetTimingForTesting, (req, res) => {
     countingRecommendationsSince = Date.now();
-    seedVideoSentAt = new Date(0);
     recommendationsSaved = 0;
     res.status(200).json({ ok: true });
   });
@@ -259,11 +258,6 @@ export const startServer = async (
     // eslint-disable-next-line no-console
     cfg.port, '0.0.0.0', () => log.info(`Listening on port ${cfg.port}`, '0.0.0.0'),
   );
-
-  app.post(POSTResetTimingForTesting, async (req, res) => {
-    seedVideoSentAt = new Date(0);
-    res.status(200).json({ ok: true });
-  });
 
   app.post(POSTClearDbForTesting, async (req, res) => {
     const queries = [
