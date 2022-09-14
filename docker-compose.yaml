@@ -14,6 +14,13 @@ services:
     depends_on:
       - postgres-test
 
+  server-integration:
+    build: .
+    ports:
+      - "38479:38479"
+    depends_on:
+      - postgres-integration
+
   client:
     build: .
 
@@ -46,6 +53,18 @@ services:
     volumes:
       - test-yt_rec_graph:/var/lib/postgresql/data
 
+  postgres-integration:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: integration
+      POSTGRES_PASSWORD: integration
+      POSTGRES_DB: integration-yt_rec_graph
+    ports:
+      - "5435:5432"
+    volumes:
+      - integration-yt_rec_graph:/var/lib/postgresql/data
+
   backup:
     build: ./backuper
     depends_on:
@@ -61,4 +80,6 @@ volumes:
   yt_graph:
     driver: local
   test-yt_rec_graph:
+    driver: local
+  integration-yt_rec_graph:
     driver: local
