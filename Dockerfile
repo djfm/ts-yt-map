@@ -18,3 +18,4 @@ RUN yarn
 RUN node_modules/.bin/pm2 install typescript
 EXPOSE 38472/tcp
 EXPOSE 38478/tcp
+EXPOSE 38479/tcp

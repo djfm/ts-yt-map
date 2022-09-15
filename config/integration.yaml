@@ -1,0 +1,9 @@
+seed_video: https://www.youtube.com/watch?v=HqsIOTEbriY
+host: server-integration
+port: 38479
+db:
+  host: postgres-integration
+  port: 5432
+  username: integration
+  password: integration
+  database: integration-yt_rec_graph

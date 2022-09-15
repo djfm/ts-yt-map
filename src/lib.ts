@@ -108,16 +108,28 @@ const getServerConfigFileName = (): string => {
     return 'production-docker.yaml';
   }
 
+  if (process.env.NODE_ENV === 'integration') {
+    return 'integration.yaml';
+  }
+
   return 'test.yaml';
 };
 
 export const loadServerConfig = async (serverPassword: string): Promise<ServerConfig> => {
   const fname = getServerConfigFileName();
+  const log = await createLogger();
 
+  if (process.env.NODE_ENV !== 'test' && fname === 'test.yaml') {
+    log.error(`Loading config from ${fname} by default. This may be a mistake.`);
+  }
+
+  log.info(`Loading server config from ${fname}`);
   const configPath = join(__dirname, '..', 'config', fname);
   const config = parseYAML(await readFile(configPath, 'utf8'));
   config.password = serverPassword;
   const serverConfig = new ServerConfig(config);
+
+  await log.close();
 
   return serverConfig;
 };

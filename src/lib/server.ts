@@ -11,7 +11,7 @@ import { Channel, ScrapedChannelData } from '../channel';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendation } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
-import { POSTGetUrlToCrawl, POSTRecommendation, POSTResetTimingForTesting, POSTClearDbForTesting } from '../endpoints/v1';
+import { POSTGetUrlToCrawl, POSTRecommendation, POSTResetTimingForTesting, POSTClearDbForTesting, getROOT } from '../endpoints/v1';
 
 export interface ServerHandle {
   close: () => Promise<void>,
@@ -271,6 +271,10 @@ export const startServer = async (
     });
 
     res.json({ queries });
+  });
+
+  app.get(getROOT, async (req, res) => {
+    res.json({ ok: true });
   });
 
   return {
