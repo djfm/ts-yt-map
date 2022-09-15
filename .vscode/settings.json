@@ -7,12 +7,14 @@
     "enmod",
     "ensite",
     "FrançoisMariedeJouvencel",
+    "geoip",
+    "geoip-lite",
     "Kengo",
     "pageerror",
     "postgres",
     "remoteip",
     "typeorm",
-    "vhosts",
+    "vhosts"
   ],
   "jest.jestCommandLine": "yarn test",
   "jest.autoRun": {

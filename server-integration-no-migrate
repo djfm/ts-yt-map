@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+password=$1
+
+if [ -z "$password" ]; then
+    echo "Usage: $0 <password>"
+    exit 1
+fi
+
+docker-compose up -d postgres
+docker-compose up -d postgres-integration
+
+docker compose build server-integration
+docker compose run --service-ports --rm -e NODE_ENV=integration server-integration bash docker-server "$password"

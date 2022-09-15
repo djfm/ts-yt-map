@@ -5,13 +5,26 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+
+import geoip from 'geoip-lite';
 
 import ScrapedVideoData, { Video } from '../video';
 import { Channel, ScrapedChannelData } from '../channel';
+import { Client } from '../client';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendation } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
-import { POSTGetUrlToCrawl, POSTRecommendation, POSTResetTimingForTesting, POSTClearDbForTesting, getROOT } from '../endpoints/v1';
+import {
+  POSTGetUrlToCrawl,
+  POSTRecommendation,
+  POSTResetTimingForTesting,
+  POSTClearDbForTesting,
+  GETRoot,
+  GETClient,
+  POSTClient,
+  POSTLogin,
+} from '../endpoints/v1';
 
 export interface ServerHandle {
   close: () => Promise<void>,
@@ -54,7 +67,7 @@ export const startServer = async (
     type: 'postgres',
     ...cfg.db,
     synchronize: false,
-    entities: [Video, Channel, Recommendation],
+    entities: [Video, Channel, Recommendation, Client],
     namingStrategy: new SnakeNamingStrategy(),
   });
 
@@ -138,19 +151,86 @@ export const startServer = async (
 
   const app = express();
 
+  app.set('view engine', 'pug');
+  app.set('views', './views');
+
   app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(cookieParser());
   app.use((req, res, next) => {
     log.debug('Authorizing request...');
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+    if (req.body.password === cfg.password) {
+      log.debug(`Authorized request for ${ip}, setting password in cookie.`);
+      res.cookie('password', cfg.password);
+      next();
+      return;
+    }
+
+    if (req.cookies && req.cookies.password === cfg.password) {
+      log.debug(`Authorized request for ${ip}`);
+      next();
+      return;
+    }
+
     if (req.headers['x-password'] !== cfg.password) {
       log.error(`Invalid password from ${ip}, got ${req.headers['x-password']} instead of ${cfg.password}`);
-      res.status(401).send('Unauthorized');
+      res.status(401).render('unauthorized');
       return;
     }
     log.debug('Authorized');
 
     next();
+  });
+
+  app.post(POSTLogin, (req, res) => {
+    res.redirect(GETClient);
+  });
+
+  app.get(GETClient, async (req, res) => {
+    if (req.cookies && req.cookies.password !== cfg.password) {
+      res.status(401).render('unauthorized');
+    } else {
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      if (ip && typeof ip === 'string') {
+        const geo = geoip.lookup(ip);
+        if (geo) {
+          let client: Client | undefined;
+
+          await ds.transaction(async (manager: EntityManager): Promise<void> => {
+            const mbClient = await manager.findOneBy(Client, { ip });
+            if (mbClient) {
+              client = mbClient;
+              client.updatedAt = new Date();
+              await manager.save(client);
+            } else {
+              client = new Client();
+              client.ip = ip;
+              client.country = geo.country;
+              client.city = geo.city;
+              await manager.save(client);
+            }
+          });
+
+          res.status(200).render('client', client);
+          return;
+        }
+      }
+      res.status(400).render('client-no-geo');
+    }
+  });
+
+  app.post(POSTClient, async (req, res) => {
+    if (req.body.seed) {
+      const clientRepo = ds.getRepository(Client);
+      const client = await clientRepo.findOneBy({ id: req.body.client_id });
+      if (client) {
+        client.seed = req.body.seed;
+        await clientRepo.save(client);
+        res.status(302).redirect(GETClient);
+      }
+    }
   });
 
   app.post(POSTGetUrlToCrawl, async (req, res) => {
@@ -273,7 +353,7 @@ export const startServer = async (
     res.json({ queries });
   });
 
-  app.get(getROOT, async (req, res) => {
+  app.get(GETRoot, async (req, res) => {
     res.json({ ok: true });
   });
 

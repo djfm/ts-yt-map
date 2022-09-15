@@ -1,0 +1,20 @@
+h1 Client Setup
+
+h2 Geo-location
+
+p We've determined your computer is based in <strong>#{country}, #{city}</strong>.
+
+p This crawler will have the id: <strong>#{id}</strong>
+
+h2 Determine this crawler's seed
+
+if seed
+  p This client uses the seed: <strong>#{seed}</strong>
+else
+  p This client will start exploring the YouTube graph from a seed video, it's up to you to determine which seed video to use.
+  form(action="/client" method="post")
+    label(for="seed") Seed&nbsp;
+    input(type="text" id="seed" name="seed")
+    input(type="hidden" name="client_id" value='#{id}')
+    <br />
+    input(type="submit" value="Submit")
