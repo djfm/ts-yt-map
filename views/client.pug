@@ -6,15 +6,16 @@ p We've determined your computer is based in <strong>#{country}, #{city}</strong
 
 p This crawler will have the id: <strong>#{id}</strong>
 
-h2 Determine this crawler's seed
-
 if seed
-  p This client uses the seed: <strong>#{seed}</strong>
+  h2 Client Seed
+  p This client uses the seed: <a target="_blank" href="#{seed}">#{seed}</a>
 else
+  h2 Determine this crawler's seed
   p This client will start exploring the YouTube graph from a seed video, it's up to you to determine which seed video to use.
-  form(action="/client" method="post")
-    label(for="seed") Seed&nbsp;
-    input(type="text" id="seed" name="seed")
-    input(type="hidden" name="client_id" value='#{id}')
+  form(method='POST', action='/client')
+    label(for='seed') Seed Video URL:&nbsp;
+    input(type='text', name='seed', id='seed')
+    input(type='hidden', name='client_id', value=id)
     <br />
-    input(type="submit" value="Submit")
+    <br />
+    input(type='submit', value='Submit')
