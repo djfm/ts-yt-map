@@ -7,5 +7,4 @@ if [ -z "$password" ]; then
     exit 1
 fi
 
-docker compose build server
 docker compose run --service-ports -e NODE_ENV=production-docker --rm server bash docker-server "$password"

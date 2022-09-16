@@ -22,6 +22,6 @@ rm prod.sql
 echo "Done."
 
 echo "Trying to start the server performing the migrations..."
+echo "Password is set to '$password'."
 
-docker compose build server-integration
 docker compose run --service-ports --rm -e NODE_ENV=integration server-integration bash docker-server "$password"

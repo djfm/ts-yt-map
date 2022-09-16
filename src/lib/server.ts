@@ -24,11 +24,14 @@ import {
   GETClient,
   POSTClient,
   POSTLogin,
+  GETIP,
+  POSTClientCreate,
 } from '../endpoints/v1';
 
 export interface ServerHandle {
   close: () => Promise<void>,
   pg: PgClient,
+  ds: DataSource,
 }
 
 const asError = (e: unknown):Error => {
@@ -163,7 +166,7 @@ export const startServer = async (
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(async (req, res, next) => {
-    log.debug('Authorizing request...');
+    log.debug(`Authorizing request (password is "${cfg.password}")...`);
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     if (req.body.password === cfg.password) {
@@ -390,8 +393,40 @@ export const startServer = async (
     res.json({ ok: true });
   });
 
+  app.get(GETIP, (req, res) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (typeof ip !== 'string') {
+      const err = `Could not get IP: ${JSON.stringify(ip)}`;
+      log.error(err);
+      res.status(500).json({ message: err });
+      return;
+    }
+    res.json({ ip });
+  });
+
+  app.post(POSTClientCreate, async (req, res) => {
+    const client = new Client(req.body);
+    const errors = await validate(client);
+    if (errors.length > 0) {
+      log.error('Invalid client', { errors });
+      res.status(400).json({ OK: false, count: 0 });
+      return;
+    }
+
+    const clientManager = ds.manager.getRepository(Client);
+    const existing = await clientManager.findOneBy({ ip: client.ip });
+
+    if (existing) {
+      Object.assign(client, existing);
+    }
+
+    await clientManager.save(client);
+    res.json(client);
+  });
+
   return {
     pg,
+    ds,
     close: async () => {
       await new Promise((resolve, reject) => {
         server.close(

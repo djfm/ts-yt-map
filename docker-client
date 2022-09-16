@@ -17,11 +17,13 @@ if [ -z "$password" ]; then
   exit 1
 fi
 
-echo "Running $concurrency clients against $server"
+echo "Running max $concurrency clients against $server"
 
-for i in $(seq 1 "$concurrency"); do
-  echo "Running client $i"
-  node_modules/.bin/pm2 start -f src/bin/client.ts -- "$server" "$password"
-done
+# ln -s "$(which ts-node)" /usr/local/lib/node_modules/pm2/node_modules/.bin/
 
-node_modules/.bin/pm2 logs --raw
+export SERVER="$server"
+export SERVER_PASSWORD="$password"
+
+pm2 start client.config.js -i "$concurrency"
+
+pm2 logs --raw

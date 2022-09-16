@@ -35,6 +35,10 @@ export class Client {
 
   @Column()
   public updatedAt: Date = new Date();
+
+  constructor(data: Partial<Client> = {}) {
+    Object.assign(this, data);
+  }
 }
 
 export default Client;

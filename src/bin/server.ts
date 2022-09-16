@@ -3,7 +3,9 @@ import startServer from '../lib/server';
 
 async function main() {
   const log = await createLogger();
-  const cfg = await loadServerConfig({ password: 'SERVER_PASSWORD' });
+  log.info('Starting server...');
+  log.info(process.argv);
+  const cfg = await loadServerConfig(process.argv[2]);
   await startServer(cfg, log);
 }
 

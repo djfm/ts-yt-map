@@ -115,15 +115,16 @@ const getServerConfigFileName = (): string => {
   return 'test.yaml';
 };
 
-export interface FromEnv {
-  password: 'SERVER_PASSWORD';
-}
-
 export const loadServerConfig = async (
-  serverPassword: string | FromEnv,
+  serverPassword: string | undefined = process.env.SERVER_PASSWORD,
 ): Promise<ServerConfig> => {
   const fname = getServerConfigFileName();
   const log = await createLogger();
+
+  if (!serverPassword) {
+    log.error('No server password provided');
+    process.exit(1);
+  }
 
   if (process.env.NODE_ENV !== 'test' && fname === 'test.yaml') {
     log.error(`Loading config from ${fname} by default. This may be a mistake.`);
@@ -132,7 +133,7 @@ export const loadServerConfig = async (
   log.info(`Loading server config from ${fname}`);
   const configPath = join(__dirname, '..', 'config', fname);
   const config = parseYAML(await readFile(configPath, 'utf8'));
-  config.password = typeof serverPassword === 'string' ? serverPassword : process.env[serverPassword.password];
+  config.password = serverPassword;
   const serverConfig = new ServerConfig(config);
 
   log.close();

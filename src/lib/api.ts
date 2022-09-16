@@ -1,8 +1,19 @@
-import fetch, { Response } from 'node-fetch';
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
-import { POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import { GETIP, POSTClearDbForTesting, POSTClientCreate, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import Client from '../client';
 
+const hasURL = (o: unknown): o is { url: string } =>
+  typeof o === 'object' && o !== null && 'url' in o
+  && typeof (o as { url: string }).url === 'string';
+
+const hasCount = (o: unknown): o is { ok: true, count: number } =>
+  typeof o === 'object' && o !== null && 'ok' in o && 'count' in o
+  && typeof (o as { ok: true, count: number }).ok === 'boolean';
+
+const hasQueries = (o: unknown): o is { queries: string[] } =>
+  typeof o === 'object' && o !== null && 'queries' in o
+  && Array.isArray((o as { queries: unknown }).queries);
 export class API {
   constructor(
     private readonly log: LoggerInterface,
@@ -29,7 +40,9 @@ export class API {
 
     if (urlResp.ok) {
       const u = await urlResp.json();
-      return u.url;
+      if (hasURL(u)) {
+        return u.url;
+      }
     }
 
     this.log.error(urlResp);
@@ -49,7 +62,10 @@ export class API {
     });
 
     if (res.ok) {
-      return res.json();
+      const got = await res.json();
+      if (hasCount(got)) {
+        return got;
+      }
     }
 
     this.log.error(res.statusText, { res });
@@ -66,11 +82,49 @@ export class API {
     });
 
     if (res.ok) {
-      return res.json();
+      const got = await res.json();
+      if (hasQueries(got)) {
+        return got;
+      }
     }
 
     this.log.error(res.statusText, { res });
     throw new Error('Failed to clear db');
+  }
+
+  public async getIP(): Promise<string> {
+    const res = await fetch(`${this.url}${GETIP}`);
+    const got = await res.json();
+
+    if (res.ok) {
+      return got.ip;
+    }
+
+    this.log.error(got.message);
+    throw new Error(got.message);
+  }
+
+  public async createClient(seed: string): Promise<Client> {
+    const client = new Client();
+    client.city = 'test';
+    client.country = 'test';
+    client.ip = await this.getIP();
+    client.seed = seed;
+    const resp = await fetch(`${this.url}${POSTClientCreate}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-password': this.password,
+      },
+      body: JSON.stringify(client),
+    });
+
+    if (resp.ok) {
+      return new Client(await resp.json());
+    }
+
+    this.log.error(resp.statusText, { resp });
+    throw new Error('Failed to create client');
   }
 }
 
