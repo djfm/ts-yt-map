@@ -75,13 +75,14 @@ export const startServer = async (
 
   type URLResp = { ok: true, url: string } | { ok: false };
 
-  const getVideoToCrawl = async (): Promise<URLResp> => {
+  const getVideoToCrawl = async (client: Client): Promise<URLResp> => {
     const resp = await ds.transaction(async (manager: EntityManager): Promise<URLResp> => {
       const video = await manager.findOne(Video, {
         where: {
           crawled: false,
           crawlAttemptCount: LessThan(4),
           latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
+          clientId: client.id,
         },
         order: { url: 'ASC' },
       });
@@ -93,7 +94,11 @@ export const startServer = async (
         return { ok: true, url: video.url };
       }
 
-      return { ok: true, url: cfg.seed_video };
+      if (client.seed) {
+        return { ok: true, url: client.seed };
+      }
+
+      return { ok: false };
     });
 
     return resp;
@@ -157,7 +162,7 @@ export const startServer = async (
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(cookieParser());
-  app.use((req, res, next) => {
+  app.use(async (req, res, next) => {
     log.debug('Authorizing request...');
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
@@ -237,7 +242,20 @@ export const startServer = async (
     log.debug('Getting video to crawl...');
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     req.setTimeout(1000 * 5);
-    const u = await getVideoToCrawl();
+    if (typeof ip !== 'string') {
+      res.status(401).render('unauthorized');
+      return;
+    }
+
+    const clientManager = ds.manager.getRepository(Client);
+    const client = await clientManager.findOneBy({ ip });
+
+    if (!client) {
+      res.status(504).json({ ok: false });
+      return;
+    }
+
+    const u = await getVideoToCrawl(client);
 
     if (u.ok) {
       log.info(`Sent video to crawl ${u.url} to ${ip}`);
@@ -255,6 +273,20 @@ export const startServer = async (
   });
 
   app.post(POSTRecommendation, async (req, res) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (typeof ip !== 'string') {
+      res.status(500).json({ ok: false });
+      return;
+    }
+
+    const clientManager = ds.manager.getRepository(Client);
+    const client = await clientManager.findOneBy({ ip });
+
+    if (!client) {
+      res.status(500).json({ ok: false });
+      return;
+    }
+
     const data = new ScrapedRecommendation(req.body.from, req.body.to);
     const errors = await validate(data);
     if (errors.length > 0) {
@@ -282,14 +314,15 @@ export const startServer = async (
       }
 
       await ds.manager.transaction(async (em: EntityManager) => {
+        data.from.clientId = client.id;
         const from = await saveVideo(em, data.from);
 
         from.crawled = true;
 
         const saves = Object.entries(data.to)
           .map(async ([rank, video]): Promise<Recommendation> => {
-          // eslint-disable-next-line no-await-in-loop
-            const to = await saveVideo(em, video);
+            // eslint-disable-next-line no-await-in-loop
+            const to = await saveVideo(em, { ...video, clientId: client.id });
 
             log.info(`Saving recommendation from ${from.id} to ${to.id}`);
 

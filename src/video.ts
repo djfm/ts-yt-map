@@ -29,6 +29,9 @@ export class ScrapedVideoData {
   @Length(1)
   public rawViewCount: string = '';
 
+  @Column()
+  public clientId: number = 0;
+
   public channelURL: string = '';
 
   public channel?: ScrapedChannelData;
