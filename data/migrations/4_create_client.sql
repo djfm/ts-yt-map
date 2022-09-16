@@ -9,7 +9,7 @@ create table client (
     updated_at timestamp not null default current_timestamp
 );
 
-create unique index idx_ip_name on Client (ip, name);
+create unique index idx_ip on client (ip);
 
 insert into client (ip, name, country, city, seed) values ('192.168.0.254','fm@paris', 'FR', 'Paris', 'https://www.youtube.com/watch?v=HqsIOTEbriY');
 
