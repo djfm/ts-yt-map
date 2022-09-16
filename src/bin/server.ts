@@ -3,15 +3,7 @@ import startServer from '../lib/server';
 
 async function main() {
   const log = await createLogger();
-  const password = process.argv[2];
-
-  if (typeof password !== 'string') {
-    // eslint-disable-next-line no-console
-    console.error('Usage: ts-node src/bin/server.ts <password>');
-    process.exit(1);
-  }
-
-  const cfg = await loadServerConfig(password);
+  const cfg = await loadServerConfig({ password: 'SERVER_PASSWORD' });
   await startServer(cfg, log);
 }
 

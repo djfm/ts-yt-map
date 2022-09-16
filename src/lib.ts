@@ -115,7 +115,13 @@ const getServerConfigFileName = (): string => {
   return 'test.yaml';
 };
 
-export const loadServerConfig = async (serverPassword: string): Promise<ServerConfig> => {
+export interface FromEnv {
+  password: 'SERVER_PASSWORD';
+}
+
+export const loadServerConfig = async (
+  serverPassword: string | FromEnv,
+): Promise<ServerConfig> => {
   const fname = getServerConfigFileName();
   const log = await createLogger();
 
@@ -126,10 +132,10 @@ export const loadServerConfig = async (serverPassword: string): Promise<ServerCo
   log.info(`Loading server config from ${fname}`);
   const configPath = join(__dirname, '..', 'config', fname);
   const config = parseYAML(await readFile(configPath, 'utf8'));
-  config.password = serverPassword;
+  config.password = typeof serverPassword === 'string' ? serverPassword : process.env[serverPassword.password];
   const serverConfig = new ServerConfig(config);
 
-  await log.close();
+  log.close();
 
   return serverConfig;
 };

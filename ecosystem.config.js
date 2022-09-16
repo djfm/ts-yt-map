@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'server',
       script: 'src/bin/server.ts',
-      watch: true,
+      watch: ['src', 'views'],
       ignore_watch: ['node_modules', 'logs'],
     },
   ],

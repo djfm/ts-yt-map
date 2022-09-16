@@ -8,7 +8,6 @@ if [ -z "$password" ]; then
 fi
 
 export PATH=/root/yt_rec_graph/node_modules/.bin/pm2:$PATH
-
-node_modules/.bin/pm2 start src/bin/server.ts -- "$password"
+SERVER_PASSWORD="$password" node_modules/.bin/pm2 start ecosystem.config.js
 
 node_modules/.bin/pm2 logs --raw
