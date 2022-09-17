@@ -4,6 +4,7 @@ import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTClientCreate, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 import Client from '../client';
+import Fetch, { Method } from '../fetch';
 
 const hasURL = (o: unknown): o is { url: string } =>
   typeof o === 'object' && o !== null && 'url' in o
@@ -23,32 +24,31 @@ export class API {
     private readonly password: string,
   ) {}
 
+  private fetch = async (method: Method, url: string): Promise<unknown> => {
+    const f = new Fetch(url)
+      .setFamily(6)
+      .setHeader('content-type', 'application/json')
+      .setHeader('x-password', this.password)
+      .setMethod(method);
+
+    const ok = await f.ok();
+
+    this.log.error(f.text());
+
+    if (ok) {
+      return f.json();
+    }
+
+    throw new Error(`Call to "${url}" failed.`);
+  };
+
   public async getUrlToCrawl(): Promise<string> {
-    let urlResp: Response;
-
-    try {
-      urlResp = await fetch(`${this.url}${POSTGetUrlToCrawl}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-password': this.password,
-        },
-      });
-    } catch (e) {
-      this.log.error('Failed to get URL to crawl', { error: e });
-      this.log.error(`Server URL was: ${this.url}`);
-      throw e;
+    const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`);
+    if (hasURL(res)) {
+      return res.url;
     }
 
-    if (urlResp.ok) {
-      const u = await urlResp.json();
-      if (hasURL(u)) {
-        return u.url;
-      }
-    }
-
-    this.log.error(urlResp);
-    throw new Error('Failed to get URL to crawl');
+    throw new Error('Could not get URL to crawl');
   }
 
   public async saveRecommendations(
