@@ -1,3 +1,5 @@
+import fetch, { Response } from 'node-fetch';
+
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTClientCreate, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
