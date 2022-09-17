@@ -1,33 +1,20 @@
 version: "3.9"
 services:
-  server:
+  client:
     build: .
-    ports:
-      - "38472:38472"
-    depends_on:
-      - postgres
+    image: fm/yt_rec_graph:latest
 
-  server-test:
-    build: .
+  server:
+    image: fm/yt_rec_graph:latest
     ports:
-      - "38478:38478"
-    depends_on:
-      - postgres-test
+     - "38472:38472"
 
   server-integration:
-    build: .
+    image: fm/yt_rec_graph:latest
     ports:
       - "38479:38479"
     depends_on:
       - postgres-integration
-
-  client:
-    build: .
-
-  client-test:
-    build: .
-    depends_on:
-      - postgres-test
 
   postgres:
     image: postgres

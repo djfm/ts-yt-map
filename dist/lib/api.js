@@ -69,7 +69,7 @@ var API = /** @class */ (function () {
                     case 0:
                         f = new fetch_1["default"](url)
                             .setFamily(6)
-                            .setHeader('Content-Type', 'application/json')
+                            .setHeader('content-type', 'application/json')
                             .setHeader('x-password', this.password)
                             .setMethod(method);
                         return [4 /*yield*/, f.ok()];
