@@ -40,4 +40,9 @@ const main = async () => {
   }
 };
 
-main();
+main().then(() => { process.exit(0); }, async (err) => {
+  const log = await createLogger();
+  log.error(err.message);
+  log.error(err.stack);
+  process.exit(1);
+});

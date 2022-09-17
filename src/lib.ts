@@ -70,14 +70,17 @@ export const createLogger = async (): Promise<LoggerInterface> => {
   const logRoot = join(__dirname, '..', 'logs', logDir);
   await mkdir(logRoot, { recursive: true });
   const logger = pino({
+    enabled: true,
     name: 'ts-yt-map',
+  });
+    /*
     transport: {
       target: 'pino-pretty',
       options: {
         colorize: true,
       },
     },
-  });
+    */
 
   logger.level = 'debug';
 
