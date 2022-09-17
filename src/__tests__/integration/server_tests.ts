@@ -21,7 +21,13 @@ beforeAll(async () => {
   api = new API(log, serverURL, password);
   client = new Client(log, api);
   server = await startServer(cfg, log);
-  api.createClient('https://www.youtube.com/watch?v=HqsIOTEbriY');
+  api.createClient({
+    name: 'test',
+    seed: 'https://www.youtube.com/watch?v=HqsIOTEbriY',
+    ip: await api.getIP(),
+    city: 'test',
+    country: 'TE',
+  });
   log.info('Removing all recommendations from server before tests...');
   const res = await api.forTestingClearDb();
   res.queries.forEach((q) => log.info(q));

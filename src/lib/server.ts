@@ -408,7 +408,8 @@ export const startServer = async (
     const client = new Client(req.body);
     const errors = await validate(client);
     if (errors.length > 0) {
-      log.error('Invalid client', { errors });
+      log.error('Invalid client');
+      log.error(errors.join('\n'));
       res.status(400).json({ OK: false, count: 0 });
       return;
     }

@@ -93,23 +93,25 @@ export class API {
   }
 
   public async getIP(): Promise<string> {
-    const res = await fetch(`${this.url}${GETIP}`);
-    const got = await res.json();
+    const res = await fetch(`${this.url}${GETIP}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-password': this.password,
+      },
+    });
 
     if (res.ok) {
+      const got = await res.json();
       return got.ip;
     }
 
-    this.log.error(got.message);
-    throw new Error(got.message);
+    return Promise.reject(new Error('Failed to get IP'));
   }
 
-  public async createClient(seed: string): Promise<Client> {
-    const client = new Client();
-    client.city = 'test';
-    client.country = 'test';
+  public async createClient(data: Partial<Client> = {}): Promise<Client> {
+    const client = new Client(data);
     client.ip = await this.getIP();
-    client.seed = seed;
     const resp = await fetch(`${this.url}${POSTClientCreate}`, {
       method: 'POST',
       headers: {
