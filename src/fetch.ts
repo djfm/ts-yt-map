@@ -58,7 +58,8 @@ export default class Fetch {
         path: this.parsedURL.pathname,
         protocol: this.parsedURL.protocol,
         timeout: 30000,
-        family: this.family,
+        // family: this.family,
+        // localAddress: '::0',
       };
 
       await new Promise(
@@ -67,7 +68,7 @@ export default class Fetch {
             throw new Error('Missing URL for API call');
           }
 
-          proto.request(options, (res) => {
+          proto.request(this.url, (res) => {
             this.statusCodeReceived = res.statusCode;
             this.responseHeaders = res.headers;
             res.on('data', (chunk) => `${this.data}${chunk}`);
