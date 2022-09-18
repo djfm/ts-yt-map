@@ -1,4 +1,4 @@
-import Fetch from '../fetch';
+import Fetch from '../../fetch';
 
 describe('The Fetch class', () => {
   it('determines the correct protocol', () => {
@@ -16,8 +16,20 @@ describe('The Fetch class', () => {
   });
 
   it('Should fetch an https ipv4 site', async () => {
-    const f = new Fetch('https://ipv4.fmdj.fr');
+    const f = new Fetch('https://ipv4.fmdj.fr').setFamily(4);
     await f.ok();
     expect(f.statusCode()).toBe(200);
+  });
+
+  it('should get the text from an http ipv6 site', async () => {
+    const f = new Fetch('http://ipv6.fmdj.fr').setFamily(6);
+    await f.ok();
+    expect(f.text().trim()).toBe('lappy 1');
+  });
+
+  it('should get the text from an ssl ipv6 website', async () => {
+    const f = new Fetch('https://ssl.ipv6.fmdj.fr').setFamily(6);
+    await f.ok();
+    expect(f.text().trim()).toBe('lappy 2');
   });
 });

@@ -50,6 +50,7 @@ export default class Fetch {
       const options = {
         agent: false,
         defaultPort: proto === https ? 443 : 80,
+        port: proto === https ? 443 : 80,
         headers: this.headers,
         host: this.parsedURL.host,
         hostname: this.parsedURL.hostname,
@@ -58,8 +59,7 @@ export default class Fetch {
         path: this.parsedURL.pathname,
         protocol: this.parsedURL.protocol,
         timeout: 30000,
-        // family: this.family,
-        // localAddress: '::0',
+        family: this.family,
       };
 
       await new Promise(
@@ -68,10 +68,12 @@ export default class Fetch {
             throw new Error('Missing URL for API call');
           }
 
-          proto.request(this.url, (res) => {
+          proto.request(options, (res) => {
             this.statusCodeReceived = res.statusCode;
             this.responseHeaders = res.headers;
-            res.on('data', (chunk) => `${this.data}${chunk}`);
+            res.on('data', (chunk) => {
+              this.data = `${this.data}${chunk}`;
+            });
             res.on('end', resolve);
             res.on('error', reject);
           }).end();
