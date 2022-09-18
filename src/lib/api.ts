@@ -17,6 +17,13 @@ const hasCount = (o: unknown): o is { ok: true, count: number } =>
 const hasQueries = (o: unknown): o is { queries: string[] } =>
   typeof o === 'object' && o !== null && 'queries' in o
   && Array.isArray((o as { queries: unknown }).queries);
+
+const hasIP = (o: unknown): o is { ip: string } =>
+  typeof o === 'object' && o !== null && 'ip' in o;
+
+const isClientPartial = (o: unknown): o is Partial<Client> =>
+  typeof o === 'object' && o !== null && 'id' in o && 'ip' in o;
+
 export class API {
   constructor(
     private readonly log: LoggerInterface,
@@ -24,12 +31,16 @@ export class API {
     private readonly password: string,
   ) {}
 
-  private fetch = async (method: Method, url: string): Promise<unknown> => {
+  private fetch = async (method: Method, url: string, body?: unknown): Promise<unknown> => {
     const f = new Fetch(url)
       .setFamily(6)
       .setHeader('content-type', 'application/json')
       .setHeader('x-password', this.password)
       .setMethod(method);
+
+    if (body) {
+      f.setBody(body);
+    }
 
     const ok = await f.ok();
 
@@ -54,80 +65,45 @@ export class API {
   public async saveRecommendations(
     recoData: ScrapedRecommendationData,
   ): Promise<{ok: boolean, count: number}> {
-    const res = await fetch(`${this.url}${POSTRecommendation}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-      body: JSON.stringify(recoData),
-    });
+    const res = await this.fetch('POST', `${this.url}${POSTRecommendation}`);
 
-    if (res.ok) {
-      const got = await res.json();
-      if (hasCount(got)) {
-        return got;
-      }
+    if (hasCount(res)) {
+      await this.fetch('POST', `${this.url}${POSTRecommendation}`, recoData);
+
+      return res;
     }
 
-    this.log.error(res.statusText, { res });
     throw new Error('Failed to save recommendations');
   }
 
   public async forTestingClearDb(): Promise<{queries: string[]}> {
-    const res = await fetch(`${this.url}${POSTClearDbForTesting}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-    });
+    const res = await this.fetch('POST', `${this.url}${POSTClearDbForTesting}`);
 
-    if (res.ok) {
-      const got = await res.json();
-      if (hasQueries(got)) {
-        return got;
-      }
+    if (hasQueries(res)) {
+      return res;
     }
 
-    this.log.error(res.statusText, { res });
     throw new Error('Failed to clear db');
   }
 
   public async getIP(): Promise<string> {
-    const res = await fetch(`${this.url}${GETIP}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-    });
-
-    if (res.ok) {
-      const got = await res.json();
-      return got.ip;
+    const res = await this.fetch('GET', `${this.url}${GETIP}`);
+    if (hasIP(res)) {
+      return res.ip;
     }
 
-    return Promise.reject(new Error('Failed to get IP'));
+    throw new Error('Failed to get IP');
   }
 
   public async createClient(data: Partial<Client> = {}): Promise<Client> {
     const client = new Client(data);
     client.ip = await this.getIP();
-    const resp = await fetch(`${this.url}${POSTClientCreate}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-      body: JSON.stringify(client),
-    });
+    const resp = await this.fetch('POST', `${this.url}${POSTClientCreate}`);
 
-    if (resp.ok) {
-      return new Client(await resp.json());
+    if (isClientPartial(resp)) {
+      return new Client(resp);
     }
 
-    this.log.error(resp.statusText, { resp });
     throw new Error('Failed to create client');
   }
 }

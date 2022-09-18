@@ -9,3 +9,4 @@ export const GETClient = '/client';
 export const POSTClient = '/client';
 export const GETIP = '/ip';
 export const POSTClientCreate = '/client/create';
+export const GETPing = '/ping';

@@ -26,6 +26,7 @@ import {
   POSTLogin,
   GETIP,
   POSTClientCreate,
+  GETPing,
 } from '../endpoints/v1';
 
 export interface ServerHandle {
@@ -190,6 +191,10 @@ export const startServer = async (
     log.debug('Authorized');
 
     next();
+  });
+
+  app.get(GETPing, (req, res) => {
+    res.json({ pong: true });
   });
 
   app.post(POSTLogin, (req, res) => {

@@ -18,6 +18,8 @@ export default class Fetch {
 
   private parsedURL?: URL;
 
+  private body: unknown;
+
   constructor(private url: string) {
     this.parsedURL = new URL(url);
   }
@@ -37,6 +39,11 @@ export default class Fetch {
     return this;
   }
 
+  setBody(body: unknown): Fetch {
+    this.body = body;
+    return this;
+  }
+
   async ok(): Promise<boolean> {
     const tryFetch = async () => {
       this.data = '';
@@ -46,6 +53,15 @@ export default class Fetch {
       }
 
       const proto = this.parsedURL.protocol === 'https:' ? https : http;
+
+      let body: string;
+      let json = false;
+
+      if (this.body) {
+        this.setHeader('Content-Type', 'application/json');
+        body = JSON.stringify(this.body);
+        json = true;
+      }
 
       const options = {
         agent: false,
@@ -68,7 +84,7 @@ export default class Fetch {
             throw new Error('Missing URL for API call');
           }
 
-          proto.request(options, (res) => {
+          const req = proto.request(options, (res) => {
             this.statusCodeReceived = res.statusCode;
             this.responseHeaders = res.headers;
             res.on('data', (chunk) => {
@@ -76,7 +92,13 @@ export default class Fetch {
             });
             res.on('end', resolve);
             res.on('error', reject);
-          }).end();
+          });
+
+          if (json) {
+            req.write(body);
+          }
+
+          req.end();
         },
       );
 
