@@ -114,6 +114,10 @@ const getServerConfigFileName = (): string => {
     return 'integration.yaml';
   }
 
+  if (process.env.NODE_ENV === 'integration-docker') {
+    return 'integration-docker.yaml';
+  }
+
   return 'test.yaml';
 };
 
@@ -137,6 +141,7 @@ export const loadServerConfig = async (
   const config = parseYAML(await readFile(configPath, 'utf8'));
   config.password = serverPassword;
   const serverConfig = new ServerConfig(config);
+  log.info(JSON.stringify(serverConfig, null, 2));
 
   log.close();
 

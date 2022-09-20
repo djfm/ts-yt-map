@@ -2,7 +2,7 @@ seed_video: https://www.youtube.com/watch?v=HqsIOTEbriY
 host: localhost
 port: 38479
 db:
-  host: localhost
+  host: postgres-integration
   port: 5432
   username: integration
   password: integration

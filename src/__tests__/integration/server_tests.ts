@@ -2,7 +2,6 @@ import { loadServerConfig, ServerConfig, createLogger, LoggerInterface } from '.
 import { startServer, ServerHandle } from '../../lib/server';
 import { API } from '../../lib/api';
 import Client from '../../lib/client';
-import Crawler from '../../client';
 
 const password = 'secret';
 let cfg: ServerConfig;

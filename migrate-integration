@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
+#!/usr/bin/env bash
 
-password=$1
-
-if [ -z "$password" ]; then
-    echo "Usage: $0 <password>"
-    exit 1
-fi
+password='secret'
 
 docker-compose up -d --build postgres
 docker-compose up -d --build postgres-integration
@@ -24,4 +20,4 @@ echo "Done."
 echo "Trying to start the server performing the migrations..."
 echo "Password is set to '$password'."
 
-docker compose run --service-ports --rm -e NODE_ENV=integration server-integration bash docker-server "$password"
+docker compose run --rm -e NODE_ENV=integration server-integration bash docker-server "$password"

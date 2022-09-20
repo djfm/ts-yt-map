@@ -58,11 +58,9 @@ export class API {
   public async saveRecommendations(
     recoData: ScrapedRecommendationData,
   ): Promise<{ok: boolean, count: number}> {
-    const res = await this.fetch('POST', `${this.url}${POSTRecommendation}`);
+    const res = await this.fetch('POST', `${this.url}${POSTRecommendation}`, recoData);
 
     if (hasCount(res)) {
-      await this.fetch('POST', `${this.url}${POSTRecommendation}`, recoData);
-
       return res;
     }
 
