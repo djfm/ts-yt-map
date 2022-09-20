@@ -40,7 +40,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 exports.API = void 0;
-var node_fetch_1 = __importDefault(require("node-fetch"));
 var v1_1 = require("../endpoints/v1");
 var client_1 = __importDefault(require("../client"));
 var fetch_1 = __importDefault(require("../fetch"));
@@ -56,22 +55,30 @@ var hasQueries = function (o) {
     return typeof o === 'object' && o !== null && 'queries' in o
         && Array.isArray(o.queries);
 };
+var hasIP = function (o) {
+    return typeof o === 'object' && o !== null && 'ip' in o;
+};
+var isClientPartial = function (o) {
+    return typeof o === 'object' && o !== null && 'id' in o && 'ip' in o;
+};
 var API = /** @class */ (function () {
     function API(log, url, password) {
         var _this = this;
         this.log = log;
         this.url = url;
         this.password = password;
-        this.fetch = function (method, url) { return __awaiter(_this, void 0, void 0, function () {
+        this.fetch = function (method, url, body) { return __awaiter(_this, void 0, void 0, function () {
             var f, ok;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         f = new fetch_1["default"](url)
-                            .setFamily(6)
                             .setHeader('content-type', 'application/json')
                             .setHeader('x-password', this.password)
                             .setMethod(method);
+                        if (body) {
+                            f.setBody(body);
+                        }
                         return [4 /*yield*/, f.ok()];
                     case 1:
                         ok = _a.sent();
@@ -102,58 +109,33 @@ var API = /** @class */ (function () {
     };
     API.prototype.saveRecommendations = function (recoData) {
         return __awaiter(this, void 0, void 0, function () {
-            var res, got;
+            var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, node_fetch_1["default"])("".concat(this.url).concat(v1_1.POSTRecommendation), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-password': this.password
-                            },
-                            body: JSON.stringify(recoData)
-                        })];
+                    case 0: return [4 /*yield*/, this.fetch('POST', "".concat(this.url).concat(v1_1.POSTRecommendation))];
                     case 1:
                         res = _a.sent();
-                        if (!res.ok) return [3 /*break*/, 3];
-                        return [4 /*yield*/, res.json()];
+                        if (!hasCount(res)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.fetch('POST', "".concat(this.url).concat(v1_1.POSTRecommendation), recoData)];
                     case 2:
-                        got = _a.sent();
-                        if (hasCount(got)) {
-                            return [2 /*return*/, got];
-                        }
-                        _a.label = 3;
-                    case 3:
-                        this.log.error(res.statusText, { res: res });
-                        throw new Error('Failed to save recommendations');
+                        _a.sent();
+                        return [2 /*return*/, res];
+                    case 3: throw new Error('Failed to save recommendations');
                 }
             });
         });
     };
     API.prototype.forTestingClearDb = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var res, got;
+            var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, node_fetch_1["default"])("".concat(this.url).concat(v1_1.POSTClearDbForTesting), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-password': this.password
-                            }
-                        })];
+                    case 0: return [4 /*yield*/, this.fetch('POST', "".concat(this.url).concat(v1_1.POSTClearDbForTesting))];
                     case 1:
                         res = _a.sent();
-                        if (!res.ok) return [3 /*break*/, 3];
-                        return [4 /*yield*/, res.json()];
-                    case 2:
-                        got = _a.sent();
-                        if (hasQueries(got)) {
-                            return [2 /*return*/, got];
+                        if (hasQueries(res)) {
+                            return [2 /*return*/, res];
                         }
-                        _a.label = 3;
-                    case 3:
-                        this.log.error(res.statusText, { res: res });
                         throw new Error('Failed to clear db');
                 }
             });
@@ -161,24 +143,16 @@ var API = /** @class */ (function () {
     };
     API.prototype.getIP = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var res, got;
+            var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, node_fetch_1["default"])("".concat(this.url).concat(v1_1.GETIP), {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-password': this.password
-                            }
-                        })];
+                    case 0: return [4 /*yield*/, this.fetch('GET', "".concat(this.url).concat(v1_1.GETIP))];
                     case 1:
                         res = _a.sent();
-                        if (!res.ok) return [3 /*break*/, 3];
-                        return [4 /*yield*/, res.json()];
-                    case 2:
-                        got = _a.sent();
-                        return [2 /*return*/, got.ip];
-                    case 3: return [2 /*return*/, Promise.reject(new Error('Failed to get IP'))];
+                        if (hasIP(res)) {
+                            return [2 /*return*/, res.ip];
+                        }
+                        throw new Error('Failed to get IP');
                 }
             });
         });
@@ -186,31 +160,21 @@ var API = /** @class */ (function () {
     API.prototype.createClient = function (data) {
         if (data === void 0) { data = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var client, _a, resp, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var client, _a, resp;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         client = new client_1["default"](data);
                         _a = client;
                         return [4 /*yield*/, this.getIP()];
                     case 1:
-                        _a.ip = _c.sent();
-                        return [4 /*yield*/, (0, node_fetch_1["default"])("".concat(this.url).concat(v1_1.POSTClientCreate), {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-password': this.password
-                                },
-                                body: JSON.stringify(client)
-                            })];
+                        _a.ip = _b.sent();
+                        return [4 /*yield*/, this.fetch('POST', "".concat(this.url).concat(v1_1.POSTClientCreate))];
                     case 2:
-                        resp = _c.sent();
-                        if (!resp.ok) return [3 /*break*/, 4];
-                        _b = client_1["default"].bind;
-                        return [4 /*yield*/, resp.json()];
-                    case 3: return [2 /*return*/, new (_b.apply(client_1["default"], [void 0, _c.sent()]))()];
-                    case 4:
-                        this.log.error(resp.statusText, { resp: resp });
+                        resp = _b.sent();
+                        if (isClientPartial(resp)) {
+                            return [2 /*return*/, new client_1["default"](resp)];
+                        }
                         throw new Error('Failed to create client');
                 }
             });
@@ -220,4 +184,4 @@ var API = /** @class */ (function () {
 }());
 exports.API = API;
 exports["default"] = API;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXBpLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2xpYi9hcGkudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsMERBQTZDO0FBSTdDLHNDQUF3SDtBQUN4SCxxREFBK0I7QUFDL0IsbURBQXlDO0FBRXpDLElBQU0sTUFBTSxHQUFHLFVBQUMsQ0FBVTtJQUN4QixPQUFBLE9BQU8sQ0FBQyxLQUFLLFFBQVEsSUFBSSxDQUFDLEtBQUssSUFBSSxJQUFJLEtBQUssSUFBSSxDQUFDO1dBQzlDLE9BQVEsQ0FBcUIsQ0FBQyxHQUFHLEtBQUssUUFBUTtBQURqRCxDQUNpRCxDQUFDO0FBRXBELElBQU0sUUFBUSxHQUFHLFVBQUMsQ0FBVTtJQUMxQixPQUFBLE9BQU8sQ0FBQyxLQUFLLFFBQVEsSUFBSSxDQUFDLEtBQUssSUFBSSxJQUFJLElBQUksSUFBSSxDQUFDLElBQUksT0FBTyxJQUFJLENBQUM7V0FDN0QsT0FBUSxDQUFpQyxDQUFDLEVBQUUsS0FBSyxTQUFTO0FBRDdELENBQzZELENBQUM7QUFFaEUsSUFBTSxVQUFVLEdBQUcsVUFBQyxDQUFVO0lBQzVCLE9BQUEsT0FBTyxDQUFDLEtBQUssUUFBUSxJQUFJLENBQUMsS0FBSyxJQUFJLElBQUksU0FBUyxJQUFJLENBQUM7V0FDbEQsS0FBSyxDQUFDLE9BQU8sQ0FBRSxDQUEwQixDQUFDLE9BQU8sQ0FBQztBQURyRCxDQUNxRCxDQUFDO0FBQ3hEO0lBQ0UsYUFDbUIsR0FBb0IsRUFDcEIsR0FBVyxFQUNYLFFBQWdCO1FBSG5DLGlCQUlJO1FBSGUsUUFBRyxHQUFILEdBQUcsQ0FBaUI7UUFDcEIsUUFBRyxHQUFILEdBQUcsQ0FBUTtRQUNYLGFBQVEsR0FBUixRQUFRLENBQVE7UUFHM0IsVUFBSyxHQUFHLFVBQU8sTUFBYyxFQUFFLEdBQVc7Ozs7O3dCQUMxQyxDQUFDLEdBQUcsSUFBSSxrQkFBSyxDQUFD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
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXBpLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2xpYi9hcGkudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBSUEsc0NBQXdIO0FBQ3hILHFEQUErQjtBQUMvQixtREFBeUM7QUFFekMsSUFBTSxNQUFNLEdBQUcsVUFBQyxDQUFVO0lBQ3hCLE9BQUEsT0FBTyxDQUFDLEtBQUssUUFBUSxJQUFJLENBQUMsS0FBSyxJQUFJLElBQUksS0FBSyxJQUFJLENBQUM7V0FDOUMsT0FBUSxDQUFxQixDQUFDLEdBQUcsS0FBSyxRQUFRO0FBRGpELENBQ2lELENBQUM7QUFFcEQsSUFBTSxRQUFRLEdBQUcsVUFBQyxDQUFVO0lBQzFCLE9BQUEsT0FBTyxDQUFDLEtBQUssUUFBUSxJQUFJLENBQUMsS0FBSyxJQUFJLElBQUksSUFBSSxJQUFJLENBQUMsSUFBSSxPQUFPLElBQUksQ0FBQztXQUM3RCxPQUFRLENBQWlDLENBQUMsRUFBRSxLQUFLLFNBQVM7QUFEN0QsQ0FDNkQsQ0FBQztBQUVoRSxJQUFNLFVBQVUsR0FBRyxVQUFDLENBQVU7SUFDNUIsT0FBQSxPQUFPLENBQUMsS0FBSyxRQUFRLElBQUksQ0FBQyxLQUFLLElBQUksSUFBSSxTQUFTLElBQUksQ0FBQztXQUNsRCxLQUFLLENBQUMsT0FBTyxDQUFFLENBQTBCLENBQUMsT0FBTyxDQUFDO0FBRHJELENBQ3FELENBQUM7QUFFeEQsSUFBTSxLQUFLLEdBQUcsVUFBQyxDQUFVO0lBQ3ZCLE9BQUEsT0FBTyxDQUFDLEtBQUssUUFBUSxJQUFJLENBQUMsS0FBSyxJQUFJLElBQUksSUFBSSxJQUFJLENBQUM7QUFBaEQsQ0FBZ0QsQ0FBQztBQUVuRCxJQUFNLGVBQWUsR0FBRyxVQUFDLENBQVU7SUFDakMsT0FBQSxPQUFPLENBQUMsS0FBSyxRQUFRLElBQUksQ0FBQyxLQUFLLElBQUksSUFBSSxJQUFJLElBQUksQ0FB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

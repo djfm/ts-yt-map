@@ -1,10 +1,9 @@
-import fetch, { Response } from 'node-fetch';
+import axios from 'axios';
 
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTClientCreate, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 import Client from '../client';
-import Fetch, { Method } from '../fetch';
 
 const hasURL = (o: unknown): o is { url: string } =>
   typeof o === 'object' && o !== null && 'url' in o
@@ -31,27 +30,22 @@ export class API {
     private readonly password: string,
   ) {}
 
-  private fetch = async (method: Method, url: string, body?: unknown): Promise<unknown> => {
-    const f = new Fetch(url)
-      .setFamily(6)
-      .setHeader('content-type', 'application/json')
-      .setHeader('x-password', this.password)
-      .setMethod(method);
-
-    if (body) {
-      f.setBody(body);
-    }
-
-    const ok = await f.ok();
-
-    this.log.error(f.text());
-
-    if (ok) {
-      return f.json();
-    }
-
-    throw new Error(`Call to "${url}" failed.`);
-  };
+  private async fetch(method: 'GET' | 'POST', url: string, data?: unknown): Promise<unknown> {
+    return axios({
+      method,
+      url,
+      data,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Password': this.password,
+      },
+    })
+      .then((res) => res.data)
+      .catch((err) => {
+        this.log.error(err);
+        throw err;
+      });
+  }
 
   public async getUrlToCrawl(): Promise<string> {
     const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`);
