@@ -167,30 +167,31 @@ export const startServer = async (
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(async (req, res, next) => {
-    log.debug(`Authorizing request (password is "${cfg.password}")...`);
+    log.debug(`Authorizing request (expected password is "${cfg.password}")...`);
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    log.info('headers got:');
+    log.info(JSON.stringify(req.headers, null, 2));
 
     if (req.body.password === cfg.password) {
-      log.debug(`Authorized request for ${ip}, setting password in cookie.`);
+      log.debug(`Authorized request for ${ip} via body, setting password in cookie.`);
       res.cookie('password', cfg.password);
       next();
       return;
     }
 
     if (req.cookies && req.cookies.password === cfg.password) {
-      log.debug(`Authorized request for ${ip}`);
+      log.debug(`Authorized request for ${ip} via cookie.`);
       next();
       return;
     }
 
-    if (req.headers['x-password'] !== cfg.password) {
-      log.error(`Invalid password from ${ip}, got ${req.headers['x-password']} instead of ${cfg.password}`);
-      res.status(401).render('unauthorized');
+    if (req.headers['x-password'] === cfg.password) {
+      log.debug(`Authorized request for ${ip} via header.`);
+      next();
       return;
     }
-    log.debug('Authorized');
 
-    next();
+    res.status(401).send('unauthorized');
   });
 
   app.get(GETPing, (req, res) => {
