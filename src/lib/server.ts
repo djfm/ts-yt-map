@@ -169,8 +169,6 @@ export const startServer = async (
   app.use(async (req, res, next) => {
     log.debug(`Authorizing request (expected password is "${cfg.password}")...`);
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    log.info('headers got:');
-    log.info(JSON.stringify(req.headers, null, 2));
 
     if (req.body.password === cfg.password) {
       log.debug(`Authorized request for ${ip} via body, setting password in cookie.`);
