@@ -36,7 +36,6 @@ export class API {
       url,
       data,
       headers: {
-        'Content-Type': 'application/json',
         'X-Password': this.password,
       },
     })
@@ -92,7 +91,7 @@ export class API {
   public async createClient(data: Partial<Client> = {}): Promise<Client> {
     const client = new Client(data);
     client.ip = await this.getIP();
-    const resp = await this.fetch('POST', `${this.url}${POSTClientCreate}`);
+    const resp = await this.fetch('POST', `${this.url}${POSTClientCreate}`, client);
 
     if (isClientPartial(resp)) {
       return new Client(resp);
