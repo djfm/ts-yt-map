@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:latest
 
 RUN apt-get update \
   && apt-get install -y wget gnupg \
@@ -14,7 +14,9 @@ RUN apt-get update \
                     bash --no-install-recommends
 COPY . /root/yt_rec_graph
 WORKDIR /root/yt_rec_graph
+RUN npm install -g npm@latest
+RUN npm install -g pm2
 RUN yarn
-RUN node_modules/.bin/pm2 install typescript
 EXPOSE 38472/tcp
 EXPOSE 38478/tcp
+EXPOSE 38479/tcp

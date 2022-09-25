@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 export NODE_ENV=test
-docker compose run --service-ports -d postgres-test
+docker compose run --rm --service-ports -d postgres-test
 yarn test

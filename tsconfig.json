@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
     "esModuleInterop": true,
     "strict": true,
-    "noEmit": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "inlineSourceMap": true,
+    "skipLibCheck": true,
+    "module": "commonjs",
   },
   "exclude": ["**/*.js, node_modules"]
 }

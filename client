@@ -19,5 +19,4 @@ fi
 
 echo "Building app to run client..."
 
-docker compose build client
-docker compose run -it -e LOG=show client bash docker-client "$server" "$password" "$concurrency"
+docker compose run -it client bash docker-client "$server" "$password" "$concurrency"

@@ -7,8 +7,10 @@ if [ -z "$password" ]; then
     exit 1
 fi
 
-export PATH=/root/yt_rec_graph/node_modules/.bin/pm2:$PATH
+echo "Starting the server with password '$password'..."
 
-node_modules/.bin/pm2 start src/bin/server.ts -- "$password"
+export SERVER_PASSWORD="$password"
 
-node_modules/.bin/pm2 logs --raw
+pm2 start server.config.js
+
+pm2 logs --raw

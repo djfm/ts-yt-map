@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#!/usr/bin/env bash
+
+password='secret'
+
+docker-compose up -d --build postgres
+docker-compose up -d --build postgres-integration
+
+echo "Dumping production database..."
+PGPASSFILE=./production.pgpass pg_dump -h localhost -U postgres -p 5432 yt_rec_graph > prod.sql
+echo "Dropping integration database..."
+export PGPASSFILE=./integration.pgpass
+psql -h localhost -U integration -p 5435 -d postgres -c 'DROP DATABASE "integration-yt_rec_graph";'
+psql -h localhost -U integration -p 5435 -d postgres -c 'CREATE DATABASE "integration-yt_rec_graph";'
+psql -h localhost -U integration -p 5435 -d integration-yt_rec_graph < prod.sql
+echo "Removing temporary dump file..."
+rm prod.sql
+echo "Done."
+
+echo "Trying to start the server performing the migrations..."
+echo "Password is set to '$password'."
+
+docker compose run --rm -e NODE_ENV=integration server-integration bash docker-server "$password"

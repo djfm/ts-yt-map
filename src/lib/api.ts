@@ -1,7 +1,27 @@
-import fetch, { Response } from 'node-fetch';
+import axios from 'axios';
+
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
-import { POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import { GETIP, POSTClearDbForTesting, POSTClientCreate, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import Client from '../client';
+
+const hasURL = (o: unknown): o is { url: string } =>
+  typeof o === 'object' && o !== null && 'url' in o
+  && typeof (o as { url: string }).url === 'string';
+
+const hasCount = (o: unknown): o is { ok: true, count: number } =>
+  typeof o === 'object' && o !== null && 'ok' in o && 'count' in o
+  && typeof (o as { ok: true, count: number }).ok === 'boolean';
+
+const hasQueries = (o: unknown): o is { queries: string[] } =>
+  typeof o === 'object' && o !== null && 'queries' in o
+  && Array.isArray((o as { queries: unknown }).queries);
+
+const hasIP = (o: unknown): o is { ip: string } =>
+  typeof o === 'object' && o !== null && 'ip' in o;
+
+const isClientPartial = (o: unknown): o is Partial<Client> =>
+  typeof o === 'object' && o !== null && 'id' in o && 'ip' in o;
 
 export class API {
   constructor(
@@ -10,67 +30,72 @@ export class API {
     private readonly password: string,
   ) {}
 
-  public async getUrlToCrawl(): Promise<string> {
-    let urlResp: Response;
-
-    try {
-      urlResp = await fetch(`${this.url}${POSTGetUrlToCrawl}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-password': this.password,
-        },
+  private async fetch(method: 'GET' | 'POST', url: string, data?: unknown): Promise<unknown> {
+    return axios({
+      method,
+      url,
+      data,
+      headers: {
+        'X-Password': this.password,
+      },
+    })
+      .then((res) => res.data)
+      .catch((err) => {
+        this.log.error(err);
+        throw err;
       });
-    } catch (e) {
-      this.log.error('Failed to get URL to crawl', { error: e });
-      this.log.error(`Server URL was: ${this.url}`);
-      throw e;
+  }
+
+  public async getUrlToCrawl(): Promise<string> {
+    const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`);
+    if (hasURL(res)) {
+      return res.url;
     }
 
-    if (urlResp.ok) {
-      const u = await urlResp.json();
-      return u.url;
-    }
-
-    this.log.error(urlResp);
-    throw new Error('Failed to get URL to crawl');
+    throw new Error('Could not get URL to crawl');
   }
 
   public async saveRecommendations(
     recoData: ScrapedRecommendationData,
   ): Promise<{ok: boolean, count: number}> {
-    const res = await fetch(`${this.url}${POSTRecommendation}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-      body: JSON.stringify(recoData),
-    });
+    const res = await this.fetch('POST', `${this.url}${POSTRecommendation}`, recoData);
 
-    if (res.ok) {
-      return res.json();
+    if (hasCount(res)) {
+      return res;
     }
 
-    this.log.error(res.statusText, { res });
     throw new Error('Failed to save recommendations');
   }
 
   public async forTestingClearDb(): Promise<{queries: string[]}> {
-    const res = await fetch(`${this.url}${POSTClearDbForTesting}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-password': this.password,
-      },
-    });
+    const res = await this.fetch('POST', `${this.url}${POSTClearDbForTesting}`);
 
-    if (res.ok) {
-      return res.json();
+    if (hasQueries(res)) {
+      return res;
     }
 
-    this.log.error(res.statusText, { res });
     throw new Error('Failed to clear db');
+  }
+
+  public async getIP(): Promise<string> {
+    const res = await this.fetch('GET', `${this.url}${GETIP}`);
+    if (hasIP(res)) {
+      return res.ip;
+    }
+
+    throw new Error('Failed to get IP');
+  }
+
+  public async createClient(data: Partial<Client> = {}): Promise<Client> {
+    const client = new Client(data);
+    client.ip = await this.getIP();
+    const resp = await this.fetch('POST', `${this.url}${POSTClientCreate}`, client);
+
+    if (isClientPartial(resp)) {
+      return new Client(resp);
+    }
+
+    throw new Error('Failed to create client');
   }
 }
 

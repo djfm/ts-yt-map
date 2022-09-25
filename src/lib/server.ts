@@ -5,17 +5,34 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+
+import geoip from 'geoip-lite';
 
 import ScrapedVideoData, { Video } from '../video';
 import { Channel, ScrapedChannelData } from '../channel';
+import { Client } from '../client';
 import { Recommendation } from '../recommendation';
 import { ScrapedRecommendation } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
-import { POSTGetUrlToCrawl, POSTRecommendation, POSTResetTimingForTesting, POSTClearDbForTesting } from '../endpoints/v1';
+import {
+  POSTGetUrlToCrawl,
+  POSTRecommendation,
+  POSTResetTimingForTesting,
+  POSTClearDbForTesting,
+  GETRoot,
+  GETClient,
+  POSTClient,
+  POSTLogin,
+  GETIP,
+  POSTClientCreate,
+  GETPing,
+} from '../endpoints/v1';
 
 export interface ServerHandle {
   close: () => Promise<void>,
   pg: PgClient,
+  ds: DataSource,
 }
 
 const asError = (e: unknown):Error => {
@@ -54,7 +71,7 @@ export const startServer = async (
     type: 'postgres',
     ...cfg.db,
     synchronize: false,
-    entities: [Video, Channel, Recommendation],
+    entities: [Video, Channel, Recommendation, Client],
     namingStrategy: new SnakeNamingStrategy(),
   });
 
@@ -62,13 +79,14 @@ export const startServer = async (
 
   type URLResp = { ok: true, url: string } | { ok: false };
 
-  const getVideoToCrawl = async (): Promise<URLResp> => {
+  const getVideoToCrawl = async (client: Client): Promise<URLResp> => {
     const resp = await ds.transaction(async (manager: EntityManager): Promise<URLResp> => {
       const video = await manager.findOne(Video, {
         where: {
           crawled: false,
           crawlAttemptCount: LessThan(4),
           latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
+          clientId: client.id,
         },
         order: { url: 'ASC' },
       });
@@ -80,7 +98,11 @@ export const startServer = async (
         return { ok: true, url: video.url };
       }
 
-      return { ok: true, url: cfg.seed_video };
+      if (client.seed) {
+        return { ok: true, url: client.seed };
+      }
+
+      return { ok: false };
     });
 
     return resp;
@@ -138,26 +160,99 @@ export const startServer = async (
 
   const app = express();
 
+  app.set('view engine', 'pug');
+  app.set('views', './views');
+
   app.use(bodyParser.json());
-  app.use((req, res, next) => {
-    log.debug('Authorizing request...');
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(cookieParser());
+  app.use(async (req, res, next) => {
+    log.debug(`Authorizing request (expected password is "${cfg.password}")...`);
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-    if (req.headers['x-password'] !== cfg.password) {
-      log.error(`Invalid password from ${ip}, got ${req.headers['x-password']} instead of ${cfg.password}`);
-      res.status(401).send('Unauthorized');
+    if (typeof ip !== 'string') {
+      log.error('Invalid IP address', { ip });
+      res.status(500).json({ message: 'Invalid IP address', ip });
       return;
     }
-    log.debug('Authorized');
 
-    next();
+    req.ip = ip;
+
+    const client = await ds.transaction(async (manager: EntityManager): Promise<Client> => {
+      const client = await manager.findOneBy(Client, { ip });
+      if (client) {
+        return client;
+      }
+      const newClient = new Client({ ip });
+      const geo = geoip.lookup(ip);
+      if (geo) {
+        newClient.country = geo.country;
+        newClient.city = geo.city;
+      } else {
+        log.info('Failed to lookup geoip', { ip });
+        newClient.country = 'Unknown';
+        newClient.city = 'Unknown';
+      }
+      newClient.name = `${newClient.country} - ${newClient.city}`;
+      return manager.save(newClient);
+    });
+
+    req.client = client;
+
+    if (req.body.password === cfg.password) {
+      log.debug(`Authorized request for ${ip} via body, setting password in cookie.`);
+      res.cookie('password', cfg.password);
+      next();
+      return;
+    }
+
+    if (req.cookies && req.cookies.password === cfg.password) {
+      log.debug(`Authorized request for ${ip} via cookie.`);
+      next();
+      return;
+    }
+
+    if (req.headers['x-password'] === cfg.password) {
+      log.debug(`Authorized request for ${ip} via header.`);
+      next();
+      return;
+    }
+
+    res.status(401).render('unauthorized');
+  });
+
+  app.get(GETPing, (req, res) => {
+    res.json({ pong: true });
+  });
+
+  app.post(POSTLogin, (req, res) => {
+    res.redirect(GETClient);
+  });
+
+  app.get(GETClient, async (req, res) => {
+    res.status(200).render('client', req.client);
+  });
+
+  app.post(POSTClient, async (req, res) => {
+    if (req.body.seed) {
+      const clientRepo = ds.getRepository(Client);
+      req.client.seed = req.body.seed;
+      await clientRepo.save(req.client);
+      res.redirect(GETClient);
+    }
   });
 
   app.post(POSTGetUrlToCrawl, async (req, res) => {
     log.debug('Getting video to crawl...');
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    req.setTimeout(1000 * 5);
-    const u = await getVideoToCrawl();
+    if (typeof ip !== 'string') {
+      res.status(500).json({ message: 'Invalid IP address', ip });
+      return;
+    }
+
+    const { client } = req;
+
+    const u = await getVideoToCrawl(client);
 
     if (u.ok) {
       log.info(`Sent video to crawl ${u.url} to ${ip}`);
@@ -175,6 +270,20 @@ export const startServer = async (
   });
 
   app.post(POSTRecommendation, async (req, res) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (typeof ip !== 'string') {
+      res.status(500).json({ ok: false });
+      return;
+    }
+
+    const clientManager = ds.manager.getRepository(Client);
+    const client = await clientManager.findOneBy({ ip });
+
+    if (!client) {
+      res.status(500).json({ ok: false });
+      return;
+    }
+
     const data = new ScrapedRecommendation(req.body.from, req.body.to);
     const errors = await validate(data);
     if (errors.length > 0) {
@@ -202,14 +311,15 @@ export const startServer = async (
       }
 
       await ds.manager.transaction(async (em: EntityManager) => {
+        data.from.clientId = client.id;
         const from = await saveVideo(em, data.from);
 
         from.crawled = true;
 
         const saves = Object.entries(data.to)
           .map(async ([rank, video]): Promise<Recommendation> => {
-          // eslint-disable-next-line no-await-in-loop
-            const to = await saveVideo(em, video);
+            // eslint-disable-next-line no-await-in-loop
+            const to = await saveVideo(em, { ...video, clientId: client.id });
 
             log.info(`Saving recommendation from ${from.id} to ${to.id}`);
 
@@ -273,8 +383,45 @@ export const startServer = async (
     res.json({ queries });
   });
 
+  app.get(GETRoot, async (req, res) => {
+    res.json({ ok: true });
+  });
+
+  app.get(GETIP, (req, res) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (typeof ip !== 'string') {
+      const err = `Could not get IP: ${JSON.stringify(ip)}`;
+      log.error(err);
+      res.status(500).json({ message: err });
+      return;
+    }
+    res.json({ ip });
+  });
+
+  app.post(POSTClientCreate, async (req, res) => {
+    const client = new Client(req.body);
+    const errors = await validate(client);
+    if (errors.length > 0) {
+      log.error('Invalid client');
+      log.error(errors.join('\n'));
+      res.status(400).json({ OK: false, count: 0 });
+      return;
+    }
+
+    const clientManager = ds.manager.getRepository(Client);
+    const existing = await clientManager.findOneBy({ ip: client.ip });
+
+    if (existing) {
+      Object.assign(client, existing);
+    }
+
+    await clientManager.save(client);
+    res.json(client);
+  });
+
   return {
     pg,
+    ds,
     close: async () => {
       await new Promise((resolve, reject) => {
         server.close(

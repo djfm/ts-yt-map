@@ -69,15 +69,8 @@ const logDir = new Date().toISOString();
 export const createLogger = async (): Promise<LoggerInterface> => {
   const logRoot = join(__dirname, '..', 'logs', logDir);
   await mkdir(logRoot, { recursive: true });
-  const logger = pino({
-    name: 'ts-yt-map',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-      },
-    },
-  });
+
+  const logger = pino();
 
   logger.level = 'debug';
 
@@ -108,16 +101,40 @@ const getServerConfigFileName = (): string => {
     return 'production-docker.yaml';
   }
 
+  if (process.env.NODE_ENV === 'integration') {
+    return 'integration.yaml';
+  }
+
+  if (process.env.NODE_ENV === 'integration-docker') {
+    return 'integration-docker.yaml';
+  }
+
   return 'test.yaml';
 };
 
-export const loadServerConfig = async (serverPassword: string): Promise<ServerConfig> => {
+export const loadServerConfig = async (
+  serverPassword: string | undefined = process.env.SERVER_PASSWORD,
+): Promise<ServerConfig> => {
   const fname = getServerConfigFileName();
+  const log = await createLogger();
 
+  if (!serverPassword) {
+    log.error('No server password provided');
+    process.exit(1);
+  }
+
+  if (process.env.NODE_ENV !== 'test' && fname === 'test.yaml') {
+    log.error(`Loading config from ${fname} by default. This may be a mistake.`);
+  }
+
+  log.info(`Loading server config from ${fname}`);
   const configPath = join(__dirname, '..', 'config', fname);
   const config = parseYAML(await readFile(configPath, 'utf8'));
   config.password = serverPassword;
   const serverConfig = new ServerConfig(config);
+  log.info(JSON.stringify(serverConfig, null, 2));
+
+  log.close();
 
   return serverConfig;
 };
