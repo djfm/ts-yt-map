@@ -51,7 +51,7 @@ var Client = /** @class */ (function () {
         __metadata("design:type", String)
     ], Client.prototype, "city");
     __decorate([
-        (0, class_validator_1.Length)(1, 255),
+        (0, class_validator_1.Length)(0, 255),
         (0, typeorm_1.Column)(),
         __metadata("design:type", String)
     ], Client.prototype, "seed");

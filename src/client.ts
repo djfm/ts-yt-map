@@ -26,7 +26,7 @@ export class Client {
   @Column()
   public city: string = '';
 
-  @Length(1, 255)
+  @Length(0, 255)
   @Column()
   public seed: string = '';
 

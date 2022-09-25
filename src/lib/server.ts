@@ -170,6 +170,35 @@ export const startServer = async (
     log.debug(`Authorizing request (expected password is "${cfg.password}")...`);
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+    if (typeof ip !== 'string') {
+      log.error('Invalid IP address', { ip });
+      res.status(500).json({ message: 'Invalid IP address', ip });
+      return;
+    }
+
+    req.ip = ip;
+
+    const client = await ds.transaction(async (manager: EntityManager): Promise<Client> => {
+      const client = await manager.findOneBy(Client, { ip });
+      if (client) {
+        return client;
+      }
+      const newClient = new Client({ ip });
+      const geo = geoip.lookup(ip);
+      if (geo) {
+        newClient.country = geo.country;
+        newClient.city = geo.city;
+      } else {
+        log.info('Failed to lookup geoip', { ip });
+        newClient.country = 'Unknown';
+        newClient.city = 'Unknown';
+      }
+      newClient.name = `${newClient.country} - ${newClient.city}`;
+      return manager.save(newClient);
+    });
+
+    req.client = client;
+
     if (req.body.password === cfg.password) {
       log.debug(`Authorized request for ${ip} via body, setting password in cookie.`);
       res.cookie('password', cfg.password);
@@ -201,66 +230,27 @@ export const startServer = async (
   });
 
   app.get(GETClient, async (req, res) => {
-    if (req.cookies && req.cookies.password !== cfg.password) {
-      res.status(401).render('unauthorized');
-    } else {
-      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-      if (ip && typeof ip === 'string') {
-        const geo = geoip.lookup(ip);
-        if (geo) {
-          let client: Client | undefined;
-
-          await ds.transaction(async (manager: EntityManager): Promise<void> => {
-            const mbClient = await manager.findOneBy(Client, { ip });
-            if (mbClient) {
-              client = mbClient;
-              client.updatedAt = new Date();
-              await manager.save(client);
-            } else {
-              client = new Client();
-              client.ip = ip;
-              client.country = geo.country;
-              client.city = geo.city;
-              await manager.save(client);
-            }
-          });
-
-          res.status(200).render('client', client);
-          return;
-        }
-      }
-      res.status(400).render('client-no-geo');
-    }
+    res.status(200).render('client', req.client);
   });
 
   app.post(POSTClient, async (req, res) => {
     if (req.body.seed) {
       const clientRepo = ds.getRepository(Client);
-      const client = await clientRepo.findOneBy({ id: req.body.client_id });
-      if (client) {
-        client.seed = req.body.seed;
-        await clientRepo.save(client);
-        res.status(302).redirect(GETClient);
-      }
+      req.client.seed = req.body.seed;
+      await clientRepo.save(req.client);
+      res.redirect(GETClient);
     }
   });
 
   app.post(POSTGetUrlToCrawl, async (req, res) => {
     log.debug('Getting video to crawl...');
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    req.setTimeout(1000 * 5);
     if (typeof ip !== 'string') {
-      res.status(401).render('unauthorized');
+      res.status(500).json({ message: 'Invalid IP address', ip });
       return;
     }
 
-    const clientManager = ds.manager.getRepository(Client);
-    const client = await clientManager.findOneBy({ ip });
-
-    if (!client) {
-      res.status(504).json({ ok: false });
-      return;
-    }
+    const { client } = req;
 
     const u = await getVideoToCrawl(client);
 
