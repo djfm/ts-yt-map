@@ -189,7 +189,7 @@ export const startServer = async (
       return;
     }
 
-    res.status(401).send('unauthorized');
+    res.status(401).render('unauthorized');
   });
 
   app.get(GETPing, (req, res) => {
