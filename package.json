@@ -1,7 +1,7 @@
 {
   "name": "ts-yt-map",
   "scripts": {
-    "test": "jest",
+    "test": "./test",
     "test-unit": "jest __tests__/unit",
     "server": "nodemon ./src/bin/server.ts",
     "client": "ts-node ./src/bin/client.ts",
