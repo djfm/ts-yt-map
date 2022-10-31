@@ -59,6 +59,9 @@ export class ServerConfig {
   @Length(1, 255)
   public seed_video = '';
 
+  @Length(1, 255)
+  public client_name: string = 'unspecified client';
+
   constructor(config: Record<string, unknown>) {
     Object.assign(this, config);
   }

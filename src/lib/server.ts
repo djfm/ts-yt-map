@@ -5,7 +5,6 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
 import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
 
 import geoip from 'geoip-lite';
 
@@ -21,11 +20,7 @@ import {
   POSTResetTimingForTesting,
   POSTClearDbForTesting,
   GETRoot,
-  GETClient,
-  POSTClient,
-  POSTLogin,
   GETIP,
-  POSTClientCreate,
   GETPing,
 } from '../endpoints/v1';
 
@@ -108,6 +103,29 @@ export const startServer = async (
     return resp;
   };
 
+  const getOrCreateClient = async (name: string, ip: string) => {
+    const client = await ds.transaction(async (manager: EntityManager): Promise<Client> => {
+      const client = await manager.findOneBy(Client, { ip, name });
+      if (client) {
+        return client;
+      }
+      const newClient = new Client({ ip, name });
+      const geo = geoip.lookup(ip);
+      if (geo) {
+        newClient.country = geo.country;
+        newClient.city = geo.city;
+      } else {
+        log.info('Failed to lookup geoip', { ip });
+        newClient.country = 'Unknown';
+        newClient.city = 'Unknown';
+      }
+      newClient.name = name;
+      return manager.save(newClient);
+    });
+
+    return client;
+  };
+
   const saveChannelAndGetId = async (
     repo: EntityManager, channel: ScrapedChannelData,
   ): Promise<number> => {
@@ -164,82 +182,9 @@ export const startServer = async (
   app.set('views', './views');
 
   app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(cookieParser());
-  app.use(async (req, res, next) => {
-    log.debug(`Authorizing request (expected password is "${cfg.password}")...`);
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-
-    if (typeof ip !== 'string') {
-      log.error('Invalid IP address', { ip });
-      res.status(500).json({ message: 'Invalid IP address', ip });
-      return;
-    }
-
-    req.ip = ip;
-
-    const client = await ds.transaction(async (manager: EntityManager): Promise<Client> => {
-      const client = await manager.findOneBy(Client, { ip });
-      if (client) {
-        return client;
-      }
-      const newClient = new Client({ ip });
-      const geo = geoip.lookup(ip);
-      if (geo) {
-        newClient.country = geo.country;
-        newClient.city = geo.city;
-      } else {
-        log.info('Failed to lookup geoip', { ip });
-        newClient.country = 'Unknown';
-        newClient.city = 'Unknown';
-      }
-      newClient.name = `${newClient.country} - ${newClient.city}`;
-      return manager.save(newClient);
-    });
-
-    req.client = client;
-
-    if (req.body.password === cfg.password) {
-      log.debug(`Authorized request for ${ip} via body, setting password in cookie.`);
-      res.cookie('password', cfg.password);
-      next();
-      return;
-    }
-
-    if (req.cookies && req.cookies.password === cfg.password) {
-      log.debug(`Authorized request for ${ip} via cookie.`);
-      next();
-      return;
-    }
-
-    if (req.headers['x-password'] === cfg.password) {
-      log.debug(`Authorized request for ${ip} via header.`);
-      next();
-      return;
-    }
-
-    res.status(401).render('unauthorized');
-  });
 
   app.get(GETPing, (req, res) => {
     res.json({ pong: true });
-  });
-
-  app.post(POSTLogin, (req, res) => {
-    res.redirect(GETClient);
-  });
-
-  app.get(GETClient, async (req, res) => {
-    res.status(200).render('client', req.client);
-  });
-
-  app.post(POSTClient, async (req, res) => {
-    if (req.body.seed) {
-      const clientRepo = ds.getRepository(Client);
-      req.client.seed = req.body.seed;
-      await clientRepo.save(req.client);
-      res.redirect(GETClient);
-    }
   });
 
   app.post(POSTGetUrlToCrawl, async (req, res) => {
@@ -250,7 +195,9 @@ export const startServer = async (
       return;
     }
 
-    const { client } = req;
+    // eslint-disable-next-line camelcase
+    const { client_name } = cfg;
+    const client = await getOrCreateClient(client_name, ip);
 
     const u = await getVideoToCrawl(client);
 
@@ -396,27 +343,6 @@ export const startServer = async (
       return;
     }
     res.json({ ip });
-  });
-
-  app.post(POSTClientCreate, async (req, res) => {
-    const client = new Client(req.body);
-    const errors = await validate(client);
-    if (errors.length > 0) {
-      log.error('Invalid client');
-      log.error(errors.join('\n'));
-      res.status(400).json({ OK: false, count: 0 });
-      return;
-    }
-
-    const clientManager = ds.manager.getRepository(Client);
-    const existing = await clientManager.findOneBy({ ip: client.ip });
-
-    if (existing) {
-      Object.assign(client, existing);
-    }
-
-    await clientManager.save(client);
-    res.json(client);
   });
 
   return {

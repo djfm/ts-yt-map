@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
-import { GETIP, POSTClearDbForTesting, POSTClientCreate, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import { GETIP, POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 import Client from '../client';
 
 const hasURL = (o: unknown): o is { url: string } =>
@@ -84,18 +84,6 @@ export class API {
     }
 
     throw new Error('Failed to get IP');
-  }
-
-  public async createClient(data: Partial<Client> = {}): Promise<Client> {
-    const client = new Client(data);
-    client.ip = await this.getIP();
-    const resp = await this.fetch('POST', `${this.url}${POSTClientCreate}`, client);
-
-    if (isClientPartial(resp)) {
-      return new Client(resp);
-    }
-
-    throw new Error('Failed to create client');
   }
 }
 

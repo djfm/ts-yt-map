@@ -2,12 +2,13 @@ version: "3.9"
 services:
   client:
     build: .
-    image: fm/yt_rec_graph:latest
 
   server:
-    image: fm/yt_rec_graph:latest
+    build: .
     ports:
      - "38472:38472"
+    depends_on:
+      - postgres
 
   server-integration:
     image: fm/yt_rec_graph:latest
