@@ -103,7 +103,7 @@ export const startServer = async (
     return resp;
   };
 
-  const getOrCreateClient = async (name: string, ip: string) => {
+  const getOrCreateClient = async (name: string, ip: string, seed: string) => {
     const client = await ds.transaction(async (manager: EntityManager): Promise<Client> => {
       const client = await manager.findOneBy(Client, { ip, name });
       if (client) {
@@ -120,6 +120,7 @@ export const startServer = async (
         newClient.city = 'Unknown';
       }
       newClient.name = name;
+      newClient.seed = seed;
       return manager.save(newClient);
     });
 
@@ -196,8 +197,8 @@ export const startServer = async (
     }
 
     // eslint-disable-next-line camelcase
-    const { client_name } = cfg;
-    const client = await getOrCreateClient(client_name, ip);
+    const { client_name, seed_video } = cfg;
+    const client = await getOrCreateClient(client_name, ip, seed_video);
 
     const u = await getVideoToCrawl(client);
 
