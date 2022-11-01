@@ -40,6 +40,8 @@ const asError = (e: unknown):Error => {
 let countingRecommendationsSince = Date.now();
 let recommendationsSaved = 0;
 
+const sentURLsToCrawl = new Set<string>();
+
 export const startServer = async (
   cfg: ServerConfig, log: LoggerInterface,
 ): Promise<ServerHandle> => {
@@ -214,11 +216,22 @@ export const startServer = async (
     const u = await getVideoToCrawl(client);
 
     if (u.ok) {
+      if (sentURLsToCrawl.has(u.url)) {
+        res.status(500).json({ ok: false, message: 'URL already sent to parse' });
+        return;
+      }
+
+      sentURLsToCrawl.add(u.url);
+
+      setTimeout(() => {
+        sentURLsToCrawl.delete(u.url);
+      }, 1000 * 60 * 15);
+
       log.info(`Sent video to crawl ${u.url} to ${ip}`);
       res.status(200).json(u);
     } else {
       log.info(`No video to crawl for ${ip}`);
-      res.status(504).json(u);
+      res.status(503).json(u);
     }
   });
 
@@ -252,6 +265,7 @@ export const startServer = async (
     }
 
     log.info('Received recommendations to save.');
+    sentURLsToCrawl.delete(data.from.url);
 
     try {
       const videoRepo = ds.getRepository(Video);

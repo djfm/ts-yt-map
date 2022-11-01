@@ -35,7 +35,7 @@ const main = async () => {
     } catch (e) {
       log.error(e);
       // eslint-disable-next-line no-await-in-loop
-      await sleep(1000);
+      await sleep(5000);
     }
   }
 };

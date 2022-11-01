@@ -78,7 +78,7 @@ var main = function () { return __awaiter(void 0, void 0, void 0, function () {
                 e_1 = _a.sent();
                 log.error(e_1);
                 // eslint-disable-next-line no-await-in-loop
-                return [4 /*yield*/, (0, util_1.sleep)(1000)];
+                return [4 /*yield*/, (0, util_1.sleep)(5000)];
             case 5:
                 // eslint-disable-next-line no-await-in-loop
                 _a.sent();

@@ -130,12 +130,12 @@ export const loadServerConfig = async (
     log.error(`Loading config from ${fname} by default. This may be a mistake.`);
   }
 
-  log.info(`Loading server config from ${fname}`);
+  // log.info(`Loading server config from ${fname}`);
   const configPath = join(__dirname, '..', 'config', fname);
   const config = parseYAML(await readFile(configPath, 'utf8'));
   config.password = serverPassword;
   const serverConfig = new ServerConfig(config);
-  log.info(JSON.stringify(serverConfig, null, 2));
+  // log.info(JSON.stringify(serverConfig, null, 2));
 
   log.close();
 

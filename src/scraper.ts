@@ -38,6 +38,7 @@ export class Scraper {
   async try_scrapeRecommendations(videoURL: string): Promise<ScrapedRecommendationData> {
     this.log.info(`Scraping recommendations from URL: ${videoURL}`);
     const cfg = await loadChromeConfig();
+    this.log.info(cfg);
     const browser = await Browser.launch(cfg);
 
     if (this.channelCache.size > 100) {
