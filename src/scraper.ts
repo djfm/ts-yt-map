@@ -108,10 +108,14 @@ export class Scraper {
       await page.acceptCookiesIfAny();
     }
 
-    const titleSelector = '#primary-inner h1.title yt-formatted-string';
+    // const titleSelector = '#primary-inner h1.title yt-formatted-string';
+    // changed 01/11/2022 to:
+    const titleSelector = 'ytd-watch-metadata h1';
     res.title = await page.getInnerText(titleSelector);
 
-    const likeCountSelector = '#primary-inner #top-level-buttons-computed yt-formatted-string';
+    // const likeCountSelector = '#primary-inner #top-level-buttons-computed yt-formatted-string';
+    // changed 01/11/2022 to:
+    const likeCountSelector = 'ytd-toggle-button-renderer yt-button-shape:first-child';
     res.rawLikeCount = await page.getInnerText(likeCountSelector);
 
     const descriptionMoreButtonSelector = 'ytd-video-secondary-info-renderer .more-button';
