@@ -4,7 +4,7 @@ module.exports = {
       name: 'client',
       script: 'dist/bin/client.js',
       watch: false,
-      instances: 'max',
+      instances: process.env.CONCURRENCY ?? 'max',
       exec_mode: 'cluster',
     },
   ],
