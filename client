@@ -19,4 +19,4 @@ fi
 
 echo "Building app to run client..."
 
-docker compose run --rm client bash docker-client "$server" "$password" "$concurrency"
+docker compose run -e NODE_ENV=production-docker --rm client bash docker-client "$server" "$password" "$concurrency"

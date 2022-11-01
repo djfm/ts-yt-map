@@ -91,6 +91,14 @@ then **enable SSL on both of them** by following the instructions from the [cert
 
 ## Running the client
 
+**Customize the seed for this client:**
+
+Edit `seed_video` in config/production-docker.yaml and `client_name`.
+A client is identified with its name and IP address (IP as determined by server).
+The seed video is associated to the client at its creation and never changes.
+
+**Start the client(s)**
+
 Still assuming you have `docker compose` installed,
 just run:
 

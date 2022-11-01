@@ -1,7 +1,7 @@
 {
   "name": "ts-yt-map",
   "scripts": {
-    "test": "./test",
+    "test": "echo 'run them manually with ./test, I don't want scripts to autorun them'",
     "test-unit": "jest __tests__/unit",
     "server": "nodemon ./src/bin/server.ts",
     "client": "ts-node ./src/bin/client.ts",

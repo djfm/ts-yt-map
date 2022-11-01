@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { LoggerInterface } from '../lib';
+import { LoggerInterface, loadServerConfig } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 import Client from '../client';
@@ -47,7 +47,11 @@ export class API {
   }
 
   public async getUrlToCrawl(): Promise<string> {
-    const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`);
+    // eslint-disable-next-line camelcase
+    const { seed_video } = await loadServerConfig();
+
+    // eslint-disable-next-line camelcase
+    const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`, { seed_video });
     if (hasURL(res)) {
       return res.url;
     }

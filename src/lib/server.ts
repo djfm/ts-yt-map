@@ -183,6 +183,7 @@ export const startServer = async (
   app.set('views', './views');
 
   app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   app.get(GETPing, (req, res) => {
     res.json({ pong: true });
@@ -197,7 +198,17 @@ export const startServer = async (
     }
 
     // eslint-disable-next-line camelcase
-    const { client_name, seed_video } = cfg;
+    const { client_name } = cfg;
+
+    // eslint-disable-next-line camelcase
+    const { seed_video } = req.body;
+
+    // eslint-disable-next-line camelcase
+    if (!seed_video || !(typeof seed_video === 'string')) {
+      res.status(400).json({ ok: false, message: 'Missing seed video' });
+      return;
+    }
+
     const client = await getOrCreateClient(client_name, ip, seed_video);
 
     const u = await getVideoToCrawl(client);
