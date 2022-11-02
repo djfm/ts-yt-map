@@ -12,7 +12,7 @@ import ScrapedVideoData, { Video } from '../video';
 import { Channel, ScrapedChannelData } from '../channel';
 import { Client } from '../client';
 import { Recommendation } from '../recommendation';
-import { ScrapedRecommendation } from '../scraper';
+import { ScrapedRecommendationData } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
 import {
   POSTGetUrlToCrawl,
@@ -248,20 +248,21 @@ export const startServer = async (
       return;
     }
 
-    const clientManager = ds.manager.getRepository(Client);
-    const client = await clientManager.findOneBy({ ip });
-
-    if (!client) {
-      res.status(500).json({ ok: false });
-      return;
-    }
-
-    const data = new ScrapedRecommendation(req.body.from, req.body.to);
+    const data = new ScrapedRecommendationData(req.body.client_name, req.body.from, req.body.to);
     const errors = await validate(data);
     if (errors.length > 0) {
       log.error('Invalid recommendations', { errors });
       res.status(400).json({ OK: false, count: 0 });
       throw new Error('Error in recommendations data.');
+    }
+
+    const clientManager = ds.manager.getRepository(Client);
+    // eslint-disable-next-line camelcase
+    const client = await clientManager.findOneBy({ ip, name: data.client_name });
+
+    if (!client) {
+      res.status(500).json({ ok: false });
+      return;
     }
 
     log.info('Received recommendations to save.');
@@ -294,7 +295,7 @@ export const startServer = async (
             // eslint-disable-next-line no-await-in-loop
             const to = await saveVideo(em, { ...video, clientId: client.id });
 
-            log.info(`Saving recommendation from ${from.id} to ${to.id}`);
+            log.info(`Saving recommendation from ${from.id} to ${to.id} for client ${client.id} (${client.name})`);
 
             const recommendation = new Recommendation();
             recommendation.fromId = from.id;

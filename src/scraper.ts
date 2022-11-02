@@ -1,4 +1,4 @@
-import { loadChromeConfig, LoggerInterface } from './lib';
+import { loadChromeConfig, LoggerInterface, loadServerConfig } from './lib';
 import Browser from './browser';
 import { ScrapedVideoData, Video } from './video';
 import { ScrapedChannelData, asChannelType } from './channel';
@@ -6,11 +6,14 @@ import PageUtil from './pageUtil';
 
 export class ScrapedRecommendationData {
   constructor(
+    // eslint-disable-next-line camelcase
+    public client_name: string,
     public from: ScrapedVideoData,
     public to: ScrapedVideoData[],
   ) {}
 }
 
+/*
 export class ScrapedRecommendation {
   constructor(
     public from: ScrapedVideoData,
@@ -20,6 +23,7 @@ export class ScrapedRecommendation {
     this.to = to.map((v) => new Video(v));
   }
 }
+*/
 
 export class Scraper {
   constructor(private readonly log: LoggerInterface) {}
@@ -36,6 +40,9 @@ export class Scraper {
   }
 
   async try_scrapeRecommendations(videoURL: string): Promise<ScrapedRecommendationData> {
+    // eslint-disable-next-line camelcase
+    const { client_name } = await loadServerConfig();
+
     this.log.info(`Scraping recommendations from URL: ${videoURL}`);
     const cfg = await loadChromeConfig();
     this.log.info(cfg);
@@ -63,7 +70,7 @@ export class Scraper {
         }
         to.push(video);
       }
-      return new ScrapedRecommendationData(from, to);
+      return new ScrapedRecommendationData(client_name, from, to);
     } finally {
       await browser.close();
     }
