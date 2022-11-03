@@ -50,11 +50,11 @@ export class API {
 
   public async getUrlToCrawl(): Promise<string> {
     // eslint-disable-next-line camelcase
-    const { seed_video } = await loadServerConfig();
+    const { seed_video, client_name } = await loadServerConfig();
 
     try {
       // eslint-disable-next-line camelcase
-      const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`, { seed_video });
+      const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`, { seed_video, client_name });
       if (hasURL(res)) {
         return res.url;
       }
