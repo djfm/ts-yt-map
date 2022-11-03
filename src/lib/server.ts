@@ -200,7 +200,10 @@ export const startServer = async (
     }
 
     // eslint-disable-next-line camelcase
-    const { seed_video, client_name } = req.body;
+    const { client_name } = cfg;
+
+    // eslint-disable-next-line camelcase
+    const { seed_video } = req.body;
 
     // eslint-disable-next-line camelcase
     if (!seed_video || !(typeof seed_video === 'string')) {
