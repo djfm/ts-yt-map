@@ -200,10 +200,7 @@ export const startServer = async (
     }
 
     // eslint-disable-next-line camelcase
-    const { client_name } = cfg;
-
-    // eslint-disable-next-line camelcase
-    const { seed_video } = req.body;
+    const { seed_video, client_name } = req.body;
 
     // eslint-disable-next-line camelcase
     if (!seed_video || !(typeof seed_video === 'string')) {
@@ -227,7 +224,7 @@ export const startServer = async (
         sentURLsToCrawl.delete(u.url);
       }, 1000 * 60 * 15);
 
-      log.info(`Sent video to crawl ${u.url} to ${ip}`);
+      log.info(`Sent video to crawl ${u.url} to ${ip} (client with id ${client.id})`);
       res.status(200).json(u);
     } else {
       log.info(`No video to crawl for ${ip}`);
