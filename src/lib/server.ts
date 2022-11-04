@@ -214,6 +214,7 @@ export const startServer = async (
 
     if (u.ok) {
       if (sentURLsToCrawl.has(u.url)) {
+        log.info(`Already sent ${u.url} to a client`);
         res.status(500).json({ ok: false, message: 'URL already sent to parse' });
         return;
       }
