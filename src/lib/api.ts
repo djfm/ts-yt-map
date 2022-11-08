@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { LoggerInterface, loadServerConfig } from '../lib';
+import { LoggerInterface, loadConfig } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 
@@ -50,7 +50,7 @@ export class API {
 
   public async getUrlToCrawl(): Promise<string> {
     // eslint-disable-next-line camelcase
-    const { seed_video, client_name } = await loadServerConfig();
+    const { seed_video, client_name } = await loadConfig();
 
     try {
       // eslint-disable-next-line camelcase

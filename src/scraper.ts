@@ -1,4 +1,4 @@
-import { loadChromeConfig, LoggerInterface, loadServerConfig } from './lib';
+import { loadChromeConfig, LoggerInterface, loadConfig } from './lib';
 import Browser from './browser';
 import { ScrapedVideoData, Video } from './video';
 import { ScrapedChannelData, asChannelType } from './channel';
@@ -41,7 +41,7 @@ export class Scraper {
 
   async try_scrapeRecommendations(videoURL: string): Promise<ScrapedRecommendationData> {
     // eslint-disable-next-line camelcase
-    const { client_name } = await loadServerConfig();
+    const { client_name } = await loadConfig();
 
     this.log.info(`Scraping recommendations from URL: ${videoURL}`);
     const cfg = await loadChromeConfig();

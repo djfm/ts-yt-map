@@ -115,7 +115,7 @@ const getServerConfigFileName = (): string => {
   return 'test.yaml';
 };
 
-export const loadServerConfig = async (
+export const loadConfig = async (
   serverPassword: string | undefined = process.env.SERVER_PASSWORD,
 ): Promise<ServerConfig> => {
   const fname = getServerConfigFileName();
