@@ -14,6 +14,9 @@ export class ScrapedVideoData {
   public rawLikeCount: string = '';
 
   @Column()
+  public category: string | undefined = undefined;
+
+  @Column()
   @Length(1)
   public title: string = '';
 

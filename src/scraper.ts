@@ -3,6 +3,7 @@ import Browser from './browser';
 import { ScrapedVideoData, Video } from './video';
 import { ScrapedChannelData, asChannelType } from './channel';
 import PageUtil from './pageUtil';
+import { has } from './util';
 
 export class ScrapedRecommendationData {
   constructor(
@@ -157,6 +158,27 @@ export class Scraper {
     } else {
       this.log.info(`Scraping channel for video: ${res.channelURL}`);
       res.channel = await this.scrapeChannel(page, res.channelURL, false);
+    }
+
+    this.log.info('Getting video category if any...');
+
+    const ytInitialPlayerResponse = await page.getGlobalObject('ytInitialPlayerResponse');
+    console.log(ytInitialPlayerResponse);
+
+    if (has(ytInitialPlayerResponse, 'microformat')) {
+      if (has(ytInitialPlayerResponse.microformat, 'playerMicroformatRenderer')) {
+        if (has(ytInitialPlayerResponse.microformat.playerMicroformatRenderer, 'category')) {
+          const { category } = ytInitialPlayerResponse.microformat.playerMicroformatRenderer;
+          if (typeof category === 'string') {
+            res.category = category;
+            this.log.info(`Found video category: ${category}`);
+          }
+        }
+      }
+    }
+
+    if (!res.category) {
+      this.log.info('No video category found');
     }
 
     this.log.info(`Successfully scraped video: ${url}\n"${

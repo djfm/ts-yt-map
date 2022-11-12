@@ -15,6 +15,9 @@ export const convertNumber = (str: string): number => {
   return Math.round(+expanded);
 };
 
+export const has = (obj: unknown, key: string): obj is Record<string, unknown> =>
+  Object.prototype.hasOwnProperty.call(obj, key);
+
 export const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => { setTimeout(resolve, ms); });
 

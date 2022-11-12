@@ -150,6 +150,27 @@ export class PageUtil {
 
     return this.page.$(selector);
   };
+
+  _getGlobalObject = async (name: string, attemptsLeft: number): Promise<unknown> => {
+    this.log.debug(`Getting global variable: '${name}'`);
+
+    const v = this.page.evaluate('(n) => window[n]', name);
+
+    if (typeof v === 'object' && v && Object.keys(v).length > 0) {
+      return v;
+    }
+
+    if (attemptsLeft > 0) {
+      await sleep(this.waitDelay);
+      // eslint-disable-next-line no-underscore-dangle
+      return this._getGlobalObject(name, attemptsLeft - 1);
+    }
+
+    throw new Error(`Could not get global variable: '${name}'`);
+  };
+
+  // eslint-disable-next-line no-underscore-dangle
+  getGlobalObject = (name: string): Promise<unknown> => this._getGlobalObject(name, 1);
 }
 
 export default PageUtil;
