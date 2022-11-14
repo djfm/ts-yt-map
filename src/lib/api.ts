@@ -1,9 +1,18 @@
 import axios from 'axios';
+import { validate } from 'class-validator';
 
 import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
-import { GETIP, POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import {
+  GETIP,
+  POSTClearDbForTesting,
+  POSTGetUrlToCrawl,
+  POSTRecommendation,
+  POSTCreateProject,
+} from '../endpoints/v1';
+
 import { ClientSettings } from './client';
+import { Project, CreateProjectPayload } from '../models/project';
 
 const hasURL = (o: unknown): o is { url: string } =>
   typeof o === 'object' && o !== null && 'url' in o
@@ -80,6 +89,20 @@ export class API {
     }
 
     throw new Error('Failed to save recommendations');
+  }
+
+  public async createProject(project: CreateProjectPayload): Promise<Project> {
+    const res = await this.fetch('POST', `${this.url}${POSTCreateProject}`, project);
+    const newProject = new Project();
+    Object.assign(newProject, res);
+
+    const errors = await validate(newProject);
+
+    if (errors.length > 0) {
+      throw new Error(`Failed to create project: ${errors.join(', ')}`);
+    }
+
+    return newProject;
   }
 
   public async forTestingClearDb(): Promise<{queries: string[]}> {

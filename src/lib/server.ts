@@ -12,8 +12,12 @@ import ScrapedVideoData, { Video } from '../models/video';
 import { Channel, ScrapedChannelData } from '../models/channel';
 import { Client } from '../models/client';
 import { Recommendation } from '../models/recommendation';
+import { Project, CreateProjectPayload } from '../models/project';
+import { URLModel } from '../models/url';
+
 import { ScrapedRecommendationData } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
+
 import {
   POSTGetUrlToCrawl,
   POSTRecommendation,
@@ -22,6 +26,7 @@ import {
   GETRoot,
   GETIP,
   GETPing,
+  POSTCreateProject,
 } from '../endpoints/v1';
 
 export interface ServerHandle {
@@ -68,7 +73,7 @@ export const startServer = async (
     type: 'postgres',
     ...cfg.db,
     synchronize: false,
-    entities: [Video, Channel, Recommendation, Client],
+    entities: [Video, Channel, Recommendation, Client, Project, URLModel],
     namingStrategy: new SnakeNamingStrategy(),
   });
 
@@ -339,6 +344,50 @@ export const startServer = async (
       const { message } = asError(error);
       log.error(`Could not save recommendations: ${message}`, { error });
       log.error(error);
+      res.status(500).send({ ok: false, message });
+    }
+  });
+
+  app.post(POSTCreateProject, async (req, res) => {
+    const payload = new CreateProjectPayload();
+    Object.assign(payload, req.body);
+
+    const errors = await validate(payload);
+    if (errors.length > 0) {
+      log.error('Invalid project data', { errors });
+      res.status(400).json({ ok: false, errors });
+      return;
+    }
+
+    const project = new Project();
+    project.name = payload.name;
+    project.description = payload.description;
+    project.createdAt = new Date();
+    project.updatedAt = new Date();
+
+    try {
+      const responseData = await ds.manager.transaction(async (em: EntityManager) => {
+        const savedProject = await em.save(project);
+
+        for (const url of payload.urls) {
+          const m = new URLModel();
+
+          m.projectId = savedProject.id;
+          m.url = url;
+          m.createdAt = new Date();
+          m.updatedAt = new Date();
+
+          // eslint-disable-next-line no-await-in-loop
+          await em.save(m);
+        }
+
+        return savedProject;
+      });
+
+      res.json(responseData);
+    } catch (error) {
+      const { message } = asError(error);
+      log.error(`Could not save project: ${message}`, { error });
       res.status(500).send({ ok: false, message });
     }
   });

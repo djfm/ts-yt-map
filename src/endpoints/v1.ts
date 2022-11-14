@@ -7,3 +7,4 @@ export const GETRoot = '/';
 export const POSTLogin = '/login';
 export const GETIP = '/ip';
 export const GETPing = '/ping';
+export const POSTCreateProject = '/project';
