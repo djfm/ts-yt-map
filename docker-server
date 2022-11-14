@@ -11,6 +11,6 @@ echo "Starting the server with password '$password'..."
 
 export SERVER_PASSWORD="$password"
 
-pm2 start server.config.js
+yarn pm2 start server.config.js
 
-pm2 logs --raw
+yarn pm2 logs --raw

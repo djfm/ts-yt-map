@@ -17,6 +17,6 @@ export SERVER_PASSWORD="$password"
 export PROJECT_ID="$projectId"
 export CONCURRENCY="$concurrency"
 
-pm2 start client.config.js --stop-exit-codes 0
+yarn pm2 start client.config.js
 
-pm2 logs
+yarn pm2 logs

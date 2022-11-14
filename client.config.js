@@ -6,6 +6,7 @@ module.exports = {
       watch: false,
       instances: process.env.CONCURRENCY ?? 'max',
       exec_mode: 'cluster',
+      stop_exit_codes: [0],
     },
   ],
 };
