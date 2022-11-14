@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { LoggerInterface, loadConfig } from '../lib';
+import { LoggerInterface } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
 import { ClientSettings } from './client';
