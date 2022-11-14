@@ -1,3 +1,6 @@
+import readline from 'readline';
+import { stat } from 'fs/promises';
+
 import { LoggerInterface } from './lib';
 
 /* eslint-disable import/prefer-default-export */
@@ -17,6 +20,29 @@ export const convertNumber = (str: string): number => {
 
 export const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => { setTimeout(resolve, ms); });
+
+export const question = async (prompt: string): Promise<string> => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+};
+
+export const isFile = async (path: string): Promise<boolean> => {
+  try {
+    const stats = await stat(path);
+    return stats.isFile();
+  } catch (e) {
+    return false;
+  }
+};
 
 export class MockLogger implements LoggerInterface {
   error(message: string, ...meta: unknown[]): void
