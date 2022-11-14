@@ -3,6 +3,7 @@ import axios from 'axios';
 import { LoggerInterface, loadConfig } from '../lib';
 import { ScrapedRecommendationData } from '../scraper';
 import { GETIP, POSTClearDbForTesting, POSTGetUrlToCrawl, POSTRecommendation } from '../endpoints/v1';
+import { ClientSettings } from './client';
 
 const hasURL = (o: unknown): o is { url: string } =>
   typeof o === 'object' && o !== null && 'url' in o
@@ -30,6 +31,7 @@ export class API {
     private readonly log: LoggerInterface,
     private readonly url: string,
     private readonly password: string,
+    private readonly clientSettings: ClientSettings,
   ) {}
 
   private async fetch(method: 'GET' | 'POST', url: string, data?: unknown): Promise<unknown> {
@@ -49,12 +51,12 @@ export class API {
   }
 
   public async getUrlToCrawl(): Promise<string> {
-    // eslint-disable-next-line camelcase
-    const { seed_video, client_name } = await loadConfig();
-
     try {
       // eslint-disable-next-line camelcase
-      const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`, { seed_video, client_name });
+      const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`, {
+        seed_video: this.clientSettings.seedVideo,
+        client_name: this.clientSettings.name,
+      });
       if (hasURL(res)) {
         return res.url;
       }

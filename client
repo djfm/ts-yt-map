@@ -2,21 +2,22 @@
 
 server=$1
 password=$2
-concurrency="${3:-4}"
+projectId="${3:-1}"
+concurrency="${4:-4}"
 
 echo "Running script with bash:"
 bash --version
 
 if [ -z "$server" ]; then
-  echo "Usage: $0 <server> <password> [concurrency=4]"
+  echo "Usage: $0 <server> <password> [projectId=1] [concurrency=4]"
   exit 1
 fi
 
 if [ -z "$password" ]; then
-  echo "Usage: $0 <server> <password> [concurrency=4]"
+  echo "Usage: $0 <server> <password> [projectId=1] [concurrency=4]"
   exit 1
 fi
 
 echo "Building app to run client..."
 
-docker compose run -e NODE_ENV=production-docker --rm client bash docker-client "$server" "$password" "$concurrency"
+docker compose run -e NODE_ENV=production-docker --rm client bash docker-client "$server" "$password" "$projectId" "$concurrency"

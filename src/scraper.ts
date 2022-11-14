@@ -1,13 +1,15 @@
 import { loadChromeConfig, LoggerInterface, loadConfig } from './lib';
 import Browser from './browser';
-import { ScrapedVideoData, Video } from './video';
-import { ScrapedChannelData, asChannelType } from './channel';
+import { ScrapedVideoData, Video } from './models/video';
+import { ScrapedChannelData, asChannelType } from './models/channel';
 import PageUtil from './pageUtil';
+import { ClientSettings } from './lib/client';
 
 export class ScrapedRecommendationData {
   constructor(
     // eslint-disable-next-line camelcase
     public client_name: string,
+    public projectId: number,
     public from: ScrapedVideoData,
     public to: ScrapedVideoData[],
   ) {}
@@ -26,7 +28,10 @@ export class ScrapedRecommendation {
 */
 
 export class Scraper {
-  constructor(private readonly log: LoggerInterface) {}
+  constructor(
+    private readonly log: LoggerInterface,
+    private readonly clientSettings: ClientSettings,
+  ) {}
 
   private channelCache: Map<string, ScrapedChannelData> = new Map();
 
@@ -70,7 +75,12 @@ export class Scraper {
         }
         to.push(video);
       }
-      return new ScrapedRecommendationData(client_name, from, to);
+      return new ScrapedRecommendationData(
+        this.clientSettings.name,
+        this.clientSettings.projectId,
+        from,
+        to,
+      );
     } finally {
       await browser.close();
     }

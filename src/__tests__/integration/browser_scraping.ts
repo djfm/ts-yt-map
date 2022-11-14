@@ -1,8 +1,9 @@
 import { Browser } from '../../browser';
 import { loadChromeConfig, createLogger, LoggerInterface } from '../../lib';
-import { ChannelType } from '../../channel';
+import { ChannelType } from '../../models/channel';
 import { Scraper } from '../../scraper';
 import { PageUtil } from '../../pageUtil';
+import { ClientSettings } from '../../lib/client';
 
 jest.setTimeout(600000);
 
@@ -16,7 +17,8 @@ beforeEach(async () => {
   browser = await Browser.launch(cfg);
   const browserPage = await browser.newPage();
   log = await createLogger();
-  scraper = new Scraper(log);
+  const clientSettings = new ClientSettings('test', 'https://www.youtube.com/watch?v=9bZkp7q19f0', 1);
+  scraper = new Scraper(log, clientSettings);
   page = new PageUtil(log, browserPage);
 });
 

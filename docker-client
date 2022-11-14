@@ -2,20 +2,11 @@
 
 server=$1
 password=$2
-concurrency="${3:-4}"
+projectId=$3
+concurrency=$4
 
 echo "Running script with bash:"
 bash --version
-
-if [ -z "$server" ]; then
-  echo "Usage: $0 <server> <password> [concurrency=4]"
-  exit 1
-fi
-
-if [ -z "$password" ]; then
-  echo "Usage: $0 <server> <password> [concurrency=4]"
-  exit 1
-fi
 
 echo "Running max $concurrency clients against $server"
 
@@ -24,6 +15,7 @@ echo "Running max $concurrency clients against $server"
 export SERVER="$server"
 export SERVER_PASSWORD="$password"
 export CONCURRENCY="$concurrency"
+export PROJECT_ID="$projectId"
 
 pm2 start client.config.js
 

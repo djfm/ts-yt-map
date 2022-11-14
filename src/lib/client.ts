@@ -2,12 +2,24 @@ import { API } from './api';
 import { Scraper } from '../scraper';
 import { LoggerInterface } from '../lib';
 
+export class ClientSettings {
+  constructor(
+    public readonly name: string,
+    public readonly seedVideo: string,
+    public readonly projectId: number,
+  ) {}
+}
+
 export class Client {
-  constructor(private readonly log: LoggerInterface, private readonly api: API) {}
+  constructor(
+    private readonly log: LoggerInterface,
+    private readonly api: API,
+    private readonly clientSettings: ClientSettings,
+  ) {}
 
   async scrapeOneVideoAndItsRecommendations(): Promise<{ ok: boolean, count: number }> {
     const url = await this.api.getUrlToCrawl();
-    const scraper = new Scraper(this.log);
+    const scraper = new Scraper(this.log, this.clientSettings);
     const scraped = await scraper.scrapeRecommendations(url);
     let tries = 3;
     try {

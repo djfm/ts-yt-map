@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length } from 'class-validator';
 
 import ScrapedChannelData from './channel';
-import { convertNumber } from './util';
+import { convertNumber } from '../util';
 
 export class ScrapedVideoData {
   @Column()
@@ -43,6 +43,9 @@ export class ScrapedVideoData {
 export class Video extends ScrapedVideoData {
   @PrimaryGeneratedColumn()
   public id: number = -1;
+
+  @Column()
+  public projectId: number = -1;
 
   @Column()
   public crawled: boolean = false;

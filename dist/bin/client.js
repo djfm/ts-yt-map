@@ -44,6 +44,7 @@ var util_1 = require("../util");
 process.removeAllListeners('warning');
 var server = process.env.SERVER;
 var password = process.env.SERVER_PASSWORD;
+var preProjectId = process.env.PROJECT_ID;
 if (typeof server !== 'string') {
     // eslint-disable-next-line no-console
     console.error('Missing SERVER environment variable');
@@ -54,37 +55,47 @@ if (typeof password !== 'string') {
     console.error('Missing SERVER_PASSWORD environment variable');
     process.exit(1);
 }
+if (typeof preProjectId !== 'string') {
+    // eslint-disable-next-line no-console
+    console.error('Missing PROJECT_ID environment variable');
+    process.exit(1);
+}
+var projectId = parseInt(preProjectId, 10);
 var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var log, api, client, e_1;
+    var log, config, clientSettings, api, client, e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, (0, lib_1.createLogger)()];
             case 1:
                 log = _a.sent();
-                log.info("Starting client, connecting to server ".concat(server, " with password ").concat(password, "..."));
-                api = new api_1.API(log, server, password);
-                client = new client_1.Client(log, api);
-                _a.label = 2;
+                return [4 /*yield*/, (0, lib_1.loadConfig)()];
             case 2:
-                _a.trys.push([2, 4, , 6]);
+                config = _a.sent();
+                clientSettings = new client_1.ClientSettings(config.client_name, config.seed_video, projectId);
+                log.info("Starting client, connecting to server ".concat(server, " with password ").concat(password, "..."));
+                api = new api_1.API(log, server, password, clientSettings);
+                client = new client_1.Client(log, api, clientSettings);
+                _a.label = 3;
+            case 3:
+                _a.trys.push([3, 5, , 7]);
                 log.info('Scraping one video and its recommendations...');
                 // eslint-disable-next-line no-await-in-loop
                 return [4 /*yield*/, client.scrapeOneVideoAndItsRecommendations()];
-            case 3:
+            case 4:
                 // eslint-disable-next-line no-await-in-loop
                 _a.sent();
-                return [3 /*break*/, 6];
-            case 4:
+                return [3 /*break*/, 7];
+            case 5:
                 e_1 = _a.sent();
                 log.error(e_1);
                 // eslint-disable-next-line no-await-in-loop
                 return [4 /*yield*/, (0, util_1.sleep)(5000)];
-            case 5:
+            case 6:
                 // eslint-disable-next-line no-await-in-loop
                 _a.sent();
-                return [3 /*break*/, 6];
-            case 6: return [3 /*break*/, 2];
-            case 7: return [2 /*return*/];
+                return [3 /*break*/, 7];
+            case 7: return [3 /*break*/, 3];
+            case 8: return [2 /*return*/];
         }
     });
 }); };
@@ -102,4 +113,4 @@ main().then(function () { process.exit(0); }, function (err) { return __awaiter(
         }
     });
 }); });
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2xpZW50LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2Jpbi9jbGllbnQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxrQ0FBaUM7QUFDakMsd0NBQXVDO0FBQ3ZDLDhCQUFzQztBQUN0QyxnQ0FBZ0M7QUFFaEMsaUNBQWlDO0FBQ2pDLE9BQU8sQ0FBQyxrQkFBa0IsQ0FBQyxTQUFTLENBQUMsQ0FBQztBQUV0QyxJQUFNLE1BQU0sR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLE1BQU0sQ0FBQztBQUNsQyxJQUFNLFFBQVEsR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLGVBQWUsQ0FBQztBQUU3QyxJQUFJLE9BQU8sTUFBTSxLQUFLLFFBQVEsRUFBRTtJQUM5QixzQ0FBc0M7SUFDdEMsT0FBTyxDQUFDLEtBQUssQ0FBQyxxQ0FBcUMsQ0FBQyxDQUFDO0lBQ3JELE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7Q0FDakI7QUFFRCxJQUFJLE9BQU8sUUFBUSxLQUFLLFFBQVEsRUFBRTtJQUNoQyxzQ0FBc0M7SUFDdEMsT0FBTyxDQUFDLEtBQUssQ0FBQyw4Q0FBOEMsQ0FBQyxDQUFDO0lBQzlELE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7Q0FDakI7QUFFRCxJQUFNLElBQUksR0FBRzs7OztvQkFDQyxxQkFBTSxJQUFBLGtCQUFZLEdBQUUsRUFBQTs7Z0JBQTFCLEdBQUcsR0FBRyxTQUFvQjtnQkFDaEMsR0FBRyxDQUFDLElBQUksQ0FBQyxnREFBeUMsTUFBTSw0QkFBa0IsUUFBUSxRQUFLLENBQUMsQ0FBQztnQkFDbkYsR0FBRyxHQUFHLElBQUksU0FBRyxDQUFDLEdBQUcsRUFBRSxNQUFNLEVBQUUsUUFBUSxDQUFDLENBQUM7Z0JBQ3JDLE1BQU0sR0FBRyxJQUFJLGVBQU0sQ0FBQyxHQUFHLEVBQUUsR0FBRyxDQUFDLENBQUM7Ozs7Z0JBSWhDLEdBQUcsQ0FBQyxJQUFJLENBQUMsK0NBQStDLENBQUMsQ0FBQztnQkFDMUQsNENBQTRDO2dCQUM1QyxxQkFBTSxNQUFNLENBQUMsbUNBQW1DLEVBQUUsRUFBQTs7Z0JBRGxELDRDQUE0QztnQkFDNUMsU0FBa0QsQ0FBQzs7OztnQkFFbkQsR0FBRyxDQUFDLEtBQUssQ0FBQyxHQUFDLENBQUMsQ0FBQztnQkFDYiw0Q0FBNEM7Z0JBQzVDLHFCQUFNLElBQUEsWUFBSyxFQUFDLElBQUksQ0FBQyxFQUFBOztnQkFEakIsNENBQTRDO2dCQUM1QyxTQUFpQixDQUFDOzs7Ozs7S0FHdkIsQ0FBQztBQUVGLElBQUksRUFBRSxDQUFDLElBQUksQ0FBQyxjQUFRLE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLEVBQUUsVUFBTyxHQUFHOzs7O29CQUNwQyxxQkFBTSxJQUFBLGtCQUFZLEdBQUUsRUFBQTs7Z0JBQTFCLEdBQUcsR0FBRyxTQUFvQjtnQkFDaEMsR0FBRyxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLENBQUM7Z0JBQ3ZCLEdBQUcsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxDQUFDO2dCQUNyQixPQUFPLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDOzs7O0tBQ2pCLENBQUMsQ0FBQyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2xpZW50LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2Jpbi9jbGllbnQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxrQ0FBaUM7QUFDakMsd0NBQXVEO0FBQ3ZELDhCQUFrRDtBQUNsRCxnQ0FBZ0M7QUFFaEMsaUNBQWlDO0FBQ2pDLE9BQU8sQ0FBQyxrQkFBa0IsQ0FBQyxTQUFTLENBQUMsQ0FBQztBQUV0QyxJQUFNLE1BQU0sR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLE1BQU0sQ0FBQztBQUNsQyxJQUFNLFFBQVEsR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLGVBQWUsQ0FBQztBQUM3QyxJQUFNLFlBQVksR0FBRyxPQUFPLENBQUMsR0FBRyxDQUFDLFVBQVUsQ0FBQztBQUU1QyxJQUFJLE9BQU8sTUFBTSxLQUFLLFFBQVEsRUFBRTtJQUM5QixzQ0FBc0M7SUFDdEMsT0FBTyxDQUFDLEtBQUssQ0FBQyxxQ0FBcUMsQ0FBQyxDQUFDO0lBQ3JELE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7Q0FDakI7QUFFRCxJQUFJLE9BQU8sUUFBUSxLQUFLLFFBQVEsRUFBRTtJQUNoQyxzQ0FBc0M7SUFDdEMsT0FBTyxDQUFDLEtBQUssQ0FBQyw4Q0FBOEMsQ0FBQyxDQUFDO0lBQzlELE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7Q0FDakI7QUFFRCxJQUFJLE9BQU8sWUFBWSxLQUFLLFFBQVEsRUFBRTtJQUNwQyxzQ0FBc0M7SUFDdEMsT0FBTyxDQUFDLEtBQUssQ0FBQyx5Q0FBeUMsQ0FBQyxDQUFDO0lBQ3pELE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUM7Q0FDakI7QUFFRCxJQUFNLFNBQVMsR0FBRyxRQUFRLENBQUMsWUFBWSxFQUFFLEVBQUUsQ0FBQyxDQUFDO0FBRTdDLElBQU0sSUFBSSxHQUFHOzs7O29CQUNDLHFCQUFNLElBQUEsa0JBQVksR0FBRSxFQUFBOztnQkFBMUIsR0FBRyxHQUFHLFNBQW9CO2dCQUNqQixxQkFBTSxJQUFBLGdCQUFVLEdBQUUsRUFBQTs7Z0JBQTNCLE1BQU0sR0FBRyxTQUFrQjtnQkFFM0IsY0FBYyxHQUFHLElBQUksdUJBQWMsQ0FBQyxNQUFNLENBQUMsV0FBVyxFQUFFLE1BQU0sQ0FBQyxVQUFVLEVBQUUsU0FBUyxDQUFDLENBQUM7Z0JBRTVGLEdBQUcsQ0FBQyxJQUFJLENBQUMsZ0RBQXlDLE1BQU0sNEJBQWtCLFFBQVEsUUFBSyxDQUFDLENBQUM7Z0JBQ25GLEdBQUcsR0FBRyxJQUFJLFNBQUcsQ0FBQyxHQUFHLEVBQUUsTUFBTSxFQUFFLFFBQVEsRUFBRSxjQUFjLENBQUMsQ0FBQztnQkFDckQsTUFBTSxHQUFHLElBQUksZUFBTSxDQUFDLEdBQUcsRUFBRSxHQUFHLEVBQUUsY0FBYyxDQUFDLENBQUM7Ozs7Z0JBSWhELEdBQUcsQ0FBQyxJQUFJLENBQUMsK0NBQStDLENBQUMsQ0FBQztnQkFDMUQsNENBQTRDO2dCQUM1QyxxQkFBTSxNQUFNLENBQUMsbUNBQW1DLEVBQUUsRUFBQTs7Z0JBRGxELDRDQUE0QztnQkFDNUMsU0FBa0QsQ0FBQzs7OztnQkFFbkQsR0FBRyxDQUFDLEtBQUssQ0FBQyxHQUFDLENBQUMsQ0FBQztnQkFDYiw0Q0FBNEM7Z0JBQzVDLHFCQUFNLElBQUEsWUFBSyxFQUFDLElBQUksQ0FBQyxFQUFBOztnQkFEakIsNENBQTRDO2dCQUM1QyxTQUFpQixDQUFDOzs7Ozs7S0FHdkIsQ0FBQztBQUVGLElBQUksRUFBRSxDQUFDLElBQUksQ0FBQyxjQUFRLE9BQU8sQ0FBQyxJQUFJLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLEVBQUUsVUFBTyxHQUFHOzs7O29CQUNwQyxxQkFBTSxJQUFBLGtCQUFZLEdBQUUsRUFBQTs7Z0JBQTFCLEdBQUcsR0FBRyxTQUFvQjtnQkFDaEMsR0FBRyxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLENBQUM7Z0JBQ3ZCLEdBQUcsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxDQUFDO2dCQUNyQixPQUFPLENBQUMsSUFBSSxDQUFDLENBQUMsQ0FBQyxDQUFDOzs7O0tBQ2pCLENBQUMsQ0FBQyJ9

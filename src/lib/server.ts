@@ -8,10 +8,10 @@ import bodyParser from 'body-parser';
 
 import geoip from 'geoip-lite';
 
-import ScrapedVideoData, { Video } from '../video';
-import { Channel, ScrapedChannelData } from '../channel';
-import { Client } from '../client';
-import { Recommendation } from '../recommendation';
+import ScrapedVideoData, { Video } from '../models/video';
+import { Channel, ScrapedChannelData } from '../models/channel';
+import { Client } from '../models/client';
+import { Recommendation } from '../models/recommendation';
 import { ScrapedRecommendationData } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
 import {
@@ -152,7 +152,7 @@ export const startServer = async (
   };
 
   const saveVideo = async (
-    em: EntityManager, video: ScrapedVideoData,
+    em: EntityManager, video: ScrapedVideoData, projectId: number,
   ): Promise<Video> => {
     if (!video.channel) {
       throw new Error('Video must have a channel');
@@ -162,6 +162,8 @@ export const startServer = async (
 
     const videoEntity = new Video(video);
     videoEntity.channelId = channelId;
+    videoEntity.projectId = projectId;
+
     const videoErrors = await validate(videoEntity);
     if (videoErrors.length > 0) {
       const msg = `Invalid video: ${JSON.stringify(videoErrors)}`;
@@ -246,7 +248,12 @@ export const startServer = async (
       return;
     }
 
-    const data = new ScrapedRecommendationData(req.body.client_name, req.body.from, req.body.to);
+    const data = new ScrapedRecommendationData(
+      req.body.client_name,
+      req.body.projectId,
+      req.body.from,
+      req.body.to,
+    );
     const errors = await validate(data);
     if (errors.length > 0) {
       log.error('Invalid recommendations', { errors });
@@ -284,14 +291,14 @@ export const startServer = async (
 
       await ds.manager.transaction(async (em: EntityManager) => {
         data.from.clientId = client.id;
-        const from = await saveVideo(em, data.from);
+        const from = await saveVideo(em, data.from, data.projectId);
 
         from.crawled = true;
 
         const saves = Object.entries(data.to)
           .map(async ([rank, video]): Promise<Recommendation> => {
             // eslint-disable-next-line no-await-in-loop
-            const to = await saveVideo(em, { ...video, clientId: client.id });
+            const to = await saveVideo(em, { ...video, clientId: client.id }, data.projectId);
 
             log.info(`Saving recommendation from ${from.id} to ${to.id} for client ${client.id} (${client.name})`);
 

@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { Length } from 'class-validator';
 
-import { convertNumber } from './util';
+import { convertNumber } from '../util';
 
 export enum ChannelType {
   C = '/c/',

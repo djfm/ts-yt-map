@@ -16,6 +16,7 @@
     "pageerror",
     "portfinder",
     "postgres",
+    "reco",
     "remoteip",
     "typeorm",
     "vhosts"

@@ -1,6 +1,6 @@
 import { API } from '../lib/api';
-import { Client } from '../lib/client';
-import { createLogger } from '../lib';
+import { Client, ClientSettings } from '../lib/client';
+import { createLogger, loadConfig } from '../lib';
 import { sleep } from '../util';
 
 // for the experimental fetch API
@@ -8,6 +8,7 @@ process.removeAllListeners('warning');
 
 const server = process.env.SERVER;
 const password = process.env.SERVER_PASSWORD;
+const preProjectId = process.env.PROJECT_ID;
 
 if (typeof server !== 'string') {
   // eslint-disable-next-line no-console
@@ -21,11 +22,23 @@ if (typeof password !== 'string') {
   process.exit(1);
 }
 
+if (typeof preProjectId !== 'string') {
+  // eslint-disable-next-line no-console
+  console.error('Missing PROJECT_ID environment variable');
+  process.exit(1);
+}
+
+const projectId = parseInt(preProjectId, 10);
+
 const main = async () => {
   const log = await createLogger();
+  const config = await loadConfig();
+
+  const clientSettings = new ClientSettings(config.client_name, config.seed_video, projectId);
+
   log.info(`Starting client, connecting to server ${server} with password ${password}...`);
-  const api = new API(log, server, password);
-  const client = new Client(log, api);
+  const api = new API(log, server, password, clientSettings);
+  const client = new Client(log, api, clientSettings);
 
   for (;;) {
     try {
