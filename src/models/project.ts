@@ -18,6 +18,9 @@ export class Project {
   @Column()
   public name: string = '';
 
+  @Column({ name: 'project_type' })
+  public type: string = 'first level recommendations';
+
   @Column()
   public description: string = '';
 

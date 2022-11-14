@@ -55,30 +55,36 @@ var Client = /** @class */ (function () {
     }
     Client.prototype.scrapeOneVideoAndItsRecommendations = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var url, scraper, scraped, tries;
+            var url, scraper, scraped, tries, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.api.getUrlToCrawl()];
                     case 1:
                         url = _a.sent();
+                        if (!url) {
+                            this.log.info('No more URLs to crawl, done!');
+                            return [2 /*return*/, { ok: true, count: 0 }];
+                        }
                         scraper = new scraper_1.Scraper(this.log, this.clientSettings);
                         return [4 /*yield*/, scraper.scrapeRecommendations(url)];
                     case 2:
                         scraped = _a.sent();
                         tries = 3;
-                        try {
+                        _a.label = 3;
+                    case 3:
+                        _a.trys.push([3, 5, , 6]);
+                        return [4 /*yield*/, this.api.saveRecommendations(scraped)];
+                    case 4: return [2 /*return*/, _a.sent()];
+                    case 5:
+                        e_1 = _a.sent();
+                        this.log.error("Failed to save recommendations for URL: ".concat(url, ", retrying"), { error: e_1 });
+                        if (tries > 0) {
+                            tries -= 1;
                             return [2 /*return*/, this.api.saveRecommendations(scraped)];
                         }
-                        catch (e) {
-                            this.log.error("Failed to save recommendations for URL: ".concat(url, ", retrying"), { error: e });
-                            if (tries > 0) {
-                                tries -= 1;
-                                return [2 /*return*/, this.api.saveRecommendations(scraped)];
-                            }
-                            this.log.error("Failed to save recommendations for URL: ".concat(url), { error: e });
-                            throw e;
-                        }
-                        return [2 /*return*/];
+                        this.log.error("Failed to save recommendations for URL: ".concat(url), { error: e_1 });
+                        throw e_1;
+                    case 6: return [2 /*return*/];
                 }
             });
         });
@@ -87,4 +93,4 @@ var Client = /** @class */ (function () {
 }());
 exports.Client = Client;
 exports["default"] = Client;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2xpZW50LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2xpYi9jbGllbnQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQ0Esc0NBQXFDO0FBR3JDO0lBQ0Usd0JBQ2tCLElBQVksRUFDWixTQUFpQixFQUNqQixTQUFpQjtRQUZqQixTQUFJLEdBQUosSUFBSSxDQUFRO1FBQ1osY0FBUyxHQUFULFNBQVMsQ0FBUTtRQUNqQixjQUFTLEdBQVQsU0FBUyxDQUFRO0lBQ2hDLENBQUM7SUFDTixxQkFBQztBQUFELENBQUMsQUFORCxJQU1DO0FBTlksd0NBQWM7QUFRM0I7SUFDRSxnQkFDbUIsR0FBb0IsRUFDcEIsR0FBUSxFQUNSLGNBQThCO1FBRjlCLFFBQUcsR0FBSCxHQUFHLENBQWlCO1FBQ3BCLFFBQUcsR0FBSCxHQUFHLENBQUs7UUFDUixtQkFBYyxHQUFkLGNBQWMsQ0FBZ0I7SUFDOUMsQ0FBQztJQUVFLG9EQUFtQyxHQUF6Qzs7Ozs7NEJBQ2MscUJBQU0sSUFBSSxDQUFDLEdBQUcsQ0FBQyxhQUFhLEVBQUUsRUFBQTs7d0JBQXBDLEdBQUcsR0FBRyxTQUE4Qjt3QkFDcEMsT0FBTyxHQUFHLElBQUksaUJBQU8sQ0FBQyxJQUFJLENBQUMsR0FBRyxFQUFFLElBQUksQ0FBQyxjQUFjLENBQUMsQ0FBQzt3QkFDM0MscUJBQU0sT0FBTyxDQUFDLHFCQUFxQixDQUFDLEdBQUcsQ0FBQyxFQUFBOzt3QkFBbEQsT0FBTyxHQUFHLFNBQXdDO3dCQUNwRCxLQUFLLEdBQUcsQ0FBQyxDQUFDO3dCQUNkLElBQUk7NEJBQ0Ysc0JBQU8sSUFBSSxDQUFDLEdBQUcsQ0FBQyxtQkFBbUIsQ0FBQyxPQUFPLENBQUMsRUFBQzt5QkFDOUM7d0JBQUMsT0FBTyxDQUFDLEVBQUU7NEJBQ1YsSUFBSSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsa0RBQTJDLEdBQUcsZUFBWSxFQUFFLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxDQUFDLENBQUM7NEJBQ3pGLElBQUksS0FBSyxHQUFHLENBQUMsRUFBRTtnQ0FDYixLQUFLLElBQUksQ0FBQyxDQUFDO2dDQUNYLHNCQUFPLElBQUksQ0FBQyxHQUFHLENBQUMsbUJBQW1CLENBQUMsT0FBTyxDQUFDLEVBQUM7NkJBQzlDOzRCQUNELElBQUksQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLGtEQUEyQyxHQUFHLENBQUUsRUFBRSxFQUFFLEtBQUssRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDOzRCQUMvRSxNQUFNLENBQUMsQ0FBQzt5QkFDVDs7Ozs7S0FDRjtJQUNILGFBQUM7QUFBRCxDQUFDLEFBeEJELElBd0JDO0FBeEJZLHdCQUFNO0FBMEJuQixxQkFBZSxNQUFNLENBQUMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2xpZW50LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL2xpYi9jbGllbnQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQ0Esc0NBQXFDO0FBR3JDO0lBQ0Usd0JBQ2tCLElBQVksRUFDWixTQUFpQixFQUNqQixTQUFpQjtRQUZqQixTQUFJLEdBQUosSUFBSSxDQUFRO1FBQ1osY0FBUyxHQUFULFNBQVMsQ0FBUTtRQUNqQixjQUFTLEdBQVQsU0FBUyxDQUFRO0lBQ2hDLENBQUM7SUFDTixxQkFBQztBQUFELENBQUMsQUFORCxJQU1DO0FBTlksd0NBQWM7QUFRM0I7SUFDRSxnQkFDbUIsR0FBb0IsRUFDcEIsR0FBUSxFQUNSLGNBQThCO1FBRjlCLFFBQUcsR0FBSCxHQUFHLENBQWlCO1FBQ3BCLFFBQUcsR0FBSCxHQUFHLENBQUs7UUFDUixtQkFBYyxHQUFkLGNBQWMsQ0FBZ0I7SUFDOUMsQ0FBQztJQUVFLG9EQUFtQyxHQUF6Qzs7Ozs7NEJBQ2MscUJBQU0sSUFBSSxDQUFDLEdBQUcsQ0FBQyxhQUFhLEVBQUUsRUFBQTs7d0JBQXBDLEdBQUcsR0FBRyxTQUE4Qjt3QkFFMUMsSUFBSSxDQUFDLEdBQUcsRUFBRTs0QkFDUixJQUFJLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyw4QkFBOEIsQ0FBQyxDQUFDOzRCQUM5QyxzQkFBTyxFQUFFLEVBQUUsRUFBRSxJQUFJLEVBQUUsS0FBSyxFQUFFLENBQUMsRUFBRSxFQUFDO3lCQUMvQjt3QkFFSyxPQUFPLEdBQUcsSUFBSSxpQkFBTyxDQUFDLElBQUksQ0FBQyxHQUFHLEVBQUUsSUFBSSxDQUFDLGNBQWMsQ0FBQyxDQUFDO3dCQUMzQyxxQkFBTSxPQUFPLENBQUMscUJBQXFCLENBQUMsR0FBRyxDQUFDLEVBQUE7O3dCQUFsRCxPQUFPLEdBQUcsU0FBd0M7d0JBQ3BELEtBQUssR0FBRyxDQUFDLENBQUM7Ozs7d0JBRUwscUJBQU0sSUFBSSxDQUFDLEdBQUcsQ0FBQyxtQkFBbUIsQ0FBQyxPQUFPLENBQUMsRUFBQTs0QkFBbEQsc0JBQU8sU0FBMkMsRUFBQzs7O3dCQUVuRCxJQUFJLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxrREFBMkMsR0FBRyxlQUFZLEVBQUUsRUFBRSxLQUFLLEVBQUUsR0FBQyxFQUFFLENBQUMsQ0FBQzt3QkFDekYsSUFBSSxLQUFLLEdBQUcsQ0FBQyxFQUFFOzRCQUNiLEtBQUssSUFBSSxDQUFDLENBQUM7NEJBQ1gsc0JBQU8sSUFBSSxDQUFDLEdBQUcsQ0FBQyxtQkFBbUIsQ0FBQyxPQUFPLENBQUMsRUFBQzt5QkFDOUM7d0JBQ0QsSUFBSSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsa0RBQTJDLEdBQUcsQ0FBRSxFQUFFLEVBQUUsS0FBSyxFQUFFLEdBQUMsRUFBRSxDQUFDLENBQUM7d0JBQy9FLE1BQU0sR0FBQyxDQUFDOzs7OztLQUVYO0lBQ0gsYUFBQztBQUFELENBQUMsQUE5QkQsSUE4QkM7QUE5Qlksd0JBQU07QUFnQ25CLHFCQUFlLE1BQU0sQ0FBQyJ9

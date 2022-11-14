@@ -14,9 +14,9 @@ echo "Running max $concurrency clients against $server"
 
 export SERVER="$server"
 export SERVER_PASSWORD="$password"
-export CONCURRENCY="$concurrency"
 export PROJECT_ID="$projectId"
+export CONCURRENCY="$concurrency"
 
-pm2 start client.config.js
+pm2 start client.config.js --stop-exit-codes 0
 
 pm2 logs

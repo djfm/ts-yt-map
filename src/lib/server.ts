@@ -14,6 +14,7 @@ import { Client } from '../models/client';
 import { Recommendation } from '../models/recommendation';
 import { Project, CreateProjectPayload } from '../models/project';
 import { URLModel } from '../models/url';
+import { withLock } from '../util';
 
 import { ScrapedRecommendationData } from '../scraper';
 import { ServerConfig, LoggerInterface } from '../lib';
@@ -110,6 +111,29 @@ export const startServer = async (
     return resp;
   };
 
+  const getFirstLevelRecommendationsUrlToCrawl = async (projectId: number):
+    Promise<URLModel | null> => {
+    const repo = ds.manager.getRepository(URLModel);
+
+    const url = await repo.findOne({
+      where: {
+        crawled: false,
+        crawlAttemptCount: LessThan(4),
+        latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
+        projectId,
+      },
+      order: { id: 'ASC' },
+    });
+
+    if (url) {
+      url.latestCrawlAttemptedAt = new Date();
+      url.crawlAttemptCount += 1;
+      await repo.save(url);
+    }
+
+    return url;
+  };
+
   const getOrCreateClient = async (name: string, ip: string, seed: string) => {
     const client = await ds.transaction(async (manager: EntityManager): Promise<Client> => {
       const client = await manager.findOneBy(Client, { ip, name });
@@ -200,43 +224,75 @@ export const startServer = async (
 
   app.post(POSTGetUrlToCrawl, async (req, res) => {
     log.debug('Getting video to crawl...');
+
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     if (typeof ip !== 'string') {
       res.status(500).json({ message: 'Invalid IP address', ip });
       return;
     }
 
-    // eslint-disable-next-line camelcase
-    const { seed_video, client_name } = req.body;
+    const projectRepo = ds.getRepository(Project);
+    const project = await projectRepo.findOneBy({ id: req.body.project_id });
 
-    // eslint-disable-next-line camelcase
-    if (!seed_video || !(typeof seed_video === 'string')) {
-      res.status(400).json({ ok: false, message: 'Missing seed video' });
+    log.info({ ip, project, reqBody: req.body });
+
+    if (!project) {
+      res.status(500).json({ message: 'Invalid or missing project ID' });
       return;
     }
 
-    const client = await getOrCreateClient(client_name, ip, seed_video);
+    if (project.type === 'exploration') {
+      // eslint-disable-next-line camelcase
+      const { seed_video, client_name } = req.body;
 
-    const u = await getVideoToCrawl(client);
-
-    if (u.ok) {
-      if (sentURLsToCrawl.has(u.url)) {
-        log.info(`Already sent ${u.url} to a client`);
-        res.status(500).json({ ok: false, message: 'URL already sent to parse' });
+      // eslint-disable-next-line camelcase
+      if (!seed_video || !(typeof seed_video === 'string')) {
+        res.status(400).json({ ok: false, message: 'Missing seed video' });
         return;
       }
 
-      sentURLsToCrawl.add(u.url);
+      const client = await getOrCreateClient(client_name, ip, seed_video);
 
-      setTimeout(() => {
-        sentURLsToCrawl.delete(u.url);
-      }, 1000 * 60 * 15);
+      const u = await getVideoToCrawl(client);
 
-      log.info(`Sent video to crawl ${u.url} to ${ip} (client with id ${client.id})`);
-      res.status(200).json(u);
+      if (u.ok) {
+        if (sentURLsToCrawl.has(u.url)) {
+          log.info(`Already sent ${u.url} to a client`);
+          res.status(500).json({ ok: false, message: 'URL already sent to parse' });
+          return;
+        }
+
+        sentURLsToCrawl.add(u.url);
+
+        setTimeout(() => {
+          sentURLsToCrawl.delete(u.url);
+        }, 1000 * 60 * 15);
+
+        log.info(`Sent video to crawl ${u.url} to ${ip} (client with id ${client.id})`);
+        res.status(200).json(u);
+      } else {
+        log.info(`No video to crawl for ${ip}`);
+        res.status(503).json(u);
+      }
+    } else if (project.type === 'first level recommendations') {
+      try {
+        await withLock(`first-level-recommendations-${project.id}`, async () => {
+          const url = (await getFirstLevelRecommendationsUrlToCrawl(project.id))?.url ?? '';
+
+          if (url) {
+            log.info(`Sent first level recommendations url to crawl ${url} to ${ip}`);
+          } else {
+            log.info(`No first level recommendations url to crawl for ${ip}`);
+          }
+
+          res.status(200).json({ url });
+        });
+      } catch (err) {
+        log.error(err);
+        res.status(500).json({ message: asError(err).message });
+      }
     } else {
-      log.info(`No video to crawl for ${ip}`);
-      res.status(503).json(u);
+      res.status(500).json({ message: 'Invalid project type' });
     }
   });
 

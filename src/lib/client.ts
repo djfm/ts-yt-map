@@ -19,11 +19,17 @@ export class Client {
 
   async scrapeOneVideoAndItsRecommendations(): Promise<{ ok: boolean, count: number }> {
     const url = await this.api.getUrlToCrawl();
+
+    if (!url) {
+      this.log.info('No more URLs to crawl, done!');
+      return { ok: true, count: 0 };
+    }
+
     const scraper = new Scraper(this.log, this.clientSettings);
     const scraped = await scraper.scrapeRecommendations(url);
     let tries = 3;
     try {
-      return this.api.saveRecommendations(scraped);
+      return await this.api.saveRecommendations(scraped);
     } catch (e) {
       this.log.error(`Failed to save recommendations for URL: ${url}, retrying`, { error: e });
       if (tries > 0) {

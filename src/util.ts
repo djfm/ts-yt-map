@@ -3,6 +3,44 @@ import { stat } from 'fs/promises';
 
 import { LoggerInterface } from './lib';
 
+const locks = new Map<string, Array<() => Promise<void>>>();
+
+const unstackLock = async (id: string) => {
+  const stack = locks.get(id);
+
+  if (!stack) {
+    return;
+  }
+
+  const nextFn = stack.shift();
+
+  if (!nextFn) {
+    return;
+  }
+
+  try {
+    await nextFn();
+  } finally {
+    await unstackLock(id);
+  }
+};
+
+export const withLock = async (id: string, fn: () => Promise<void>): Promise<void> => {
+  if (!locks.has(id)) {
+    locks.set(id, []);
+  }
+
+  const lock = locks.get(id);
+
+  if (!lock) {
+    throw new Error('Lock is not defined');
+  }
+
+  lock.push(fn);
+
+  await unstackLock(id);
+};
+
 /* eslint-disable import/prefer-default-export */
 export const convertNumber = (str: string): number => {
   const expanded = str.replace(/,/g, '');

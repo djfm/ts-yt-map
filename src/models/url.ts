@@ -12,7 +12,7 @@ export class URLModel {
   public url: string = '';
 
   @Column()
-  public scraped: boolean = false;
+  public crawled: boolean = false;
 
   @Column()
   public latestCrawlAttemptedAt: Date = new Date(0);

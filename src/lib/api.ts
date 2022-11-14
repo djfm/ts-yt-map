@@ -65,6 +65,7 @@ export class API {
       const res = await this.fetch('POST', `${this.url}${POSTGetUrlToCrawl}`, {
         seed_video: this.clientSettings.seedVideo,
         client_name: this.clientSettings.name,
+        project_id: this.clientSettings.projectId,
       });
       if (hasURL(res)) {
         return res.url;

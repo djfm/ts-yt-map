@@ -36,21 +36,35 @@ const main = async () => {
 
   const clientSettings = new ClientSettings(config.client_name, config.seed_video, projectId);
 
-  log.info(`Starting client, connecting to server ${server} with password ${password}...`);
   const api = new API(log, server, password, clientSettings);
   const client = new Client(log, api, clientSettings);
+  log.info(`Starting client '${
+    clientSettings.name
+  }', connecting to server ${
+    server
+  } with password ${
+    password
+  } for project ${
+    clientSettings.projectId
+  }...`);
 
   for (;;) {
     try {
       log.info('Scraping one video and its recommendations...');
       // eslint-disable-next-line no-await-in-loop
-      await client.scrapeOneVideoAndItsRecommendations();
+      const report = await client.scrapeOneVideoAndItsRecommendations();
+
+      if (report.ok && report.count === 0) {
+        break;
+      }
     } catch (e) {
       log.error(e);
       // eslint-disable-next-line no-await-in-loop
       await sleep(5000);
     }
   }
+
+  log.info('Done');
 };
 
 main().then(() => { process.exit(0); }, async (err) => {

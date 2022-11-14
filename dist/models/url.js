@@ -16,7 +16,7 @@ var URLModel = /** @class */ (function () {
         this.id = -1;
         this.projectId = -1;
         this.url = '';
-        this.scraped = false;
+        this.crawled = false;
         this.latestCrawlAttemptedAt = new Date(0);
         this.crawlAttemptCount = 0;
         this.createdAt = new Date();
@@ -37,7 +37,7 @@ var URLModel = /** @class */ (function () {
     __decorate([
         (0, typeorm_1.Column)(),
         __metadata("design:type", Boolean)
-    ], URLModel.prototype, "scraped");
+    ], URLModel.prototype, "crawled");
     __decorate([
         (0, typeorm_1.Column)(),
         __metadata("design:type", Date)
