@@ -200,7 +200,7 @@ export const startServer = async (
       throw new Error(msg);
     }
 
-    const saved = await em.findOneBy(Video, { url: videoEntity.url });
+    const saved = await em.findOneBy(Video, { url: videoEntity.url, projectId });
 
     if (saved) {
       return saved;
@@ -309,6 +309,15 @@ export const startServer = async (
       return;
     }
 
+    const project = await ds.getRepository(Project).findOneBy({ id: req.body.projectId });
+
+    if (!project) {
+      res.status(500).json({ ok: false, message: 'invalid project id' });
+      return;
+    }
+
+    log.info(`Received recommendations to save for project ${project.id} from ${ip}`);
+
     const data = new ScrapedRecommendationData(
       req.body.client_name,
       req.body.projectId,
@@ -331,12 +340,11 @@ export const startServer = async (
       return;
     }
 
-    log.info('Received recommendations to save.');
     sentURLsToCrawl.delete(data.from.url);
 
     try {
       const videoRepo = ds.getRepository(Video);
-      const from = await videoRepo.findOneBy({ url: data.from.url });
+      const from = await videoRepo.findOneBy({ url: data.from.url, projectId: data.projectId });
 
       if (from) {
         const recommendations = await ds.getRepository(Recommendation).findBy({
@@ -392,6 +400,17 @@ export const startServer = async (
             countingRecommendationsSince = Date.now();
             recommendationsSaved = 0;
           }
+        }
+
+        if (project.type === 'first level recommendations') {
+          const urlsRepo = ds.getRepository(URLModel);
+          const url = await urlsRepo.findOneByOrFail({
+            url: data.from.url,
+            projectId: data.projectId,
+          });
+
+          url.crawled = true;
+          await urlsRepo.save(url);
         }
 
         res.json({ ok: true, count: data.to.length });
