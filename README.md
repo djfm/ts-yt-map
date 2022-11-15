@@ -119,6 +119,7 @@ node dist/bin/createProject.js https://server.com some_password data/urls.sample
 ```
 
 Then answer the questions. Project name must be unique.
+The file that contains the URLs is a regular text file with one URL per line and no header.
 
 It should display something like this:
 
