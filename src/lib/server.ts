@@ -97,6 +97,7 @@ export const startServer = async (
       if (video) {
         video.latestCrawlAttemptedAt = new Date();
         video.crawlAttemptCount += 1;
+        video.updatedAt = new Date();
         await manager.save(video);
         return { ok: true, url: video.url };
       }
@@ -127,6 +128,7 @@ export const startServer = async (
 
     if (url) {
       url.latestCrawlAttemptedAt = new Date();
+      url.updatedAt = new Date();
       url.crawlAttemptCount += 1;
       await repo.save(url);
     }
@@ -410,6 +412,7 @@ export const startServer = async (
           });
 
           url.crawled = true;
+          url.updatedAt = new Date();
           await urlsRepo.save(url);
         }
 
