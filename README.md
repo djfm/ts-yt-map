@@ -103,13 +103,53 @@ Still assuming you have `docker compose` installed,
 just run:
 
 ```bash
-./client <url> <password> [concurrency=4]
+./client <url> <password> [project_id=1] [concurrency=4]
 ```
 
-If you wanna contribute your resources to our server feel free to spawn a client with:
+## Get first-level recommendations from a list of URLs
+
+### Create a "project"
+
+First start the server somewhere with `./server some_password`
+
+Then from any computer run:
 
 ```bash
-./client https://yt.fmdj.fr <password> 8
+node dist/bin/createProject.js https://server.com some_password data/urls.sample.txt
 ```
 
-I will work on providing a read-only access to the database for those interested.
+Then answer the questions. Project name must be unique.
+
+It should display something like this:
+
+```bash
+Server: https://server.com
+Password: some_password
+{"level":50,"time":1668524728301,"pid":2938054,"hostname":"maison","msg":"Loading config from test.yaml by default. This may be a mistake."}
+Project name: test project again
+Project description: a test project
+Successfully created project Project {
+  id: 2,
+  name: 'test project again',
+  type: 'first level recommendations',
+  description: 'a test project',
+  createdAt: '2022-11-15T15:05:44.615Z',
+  updatedAt: '2022-11-15T15:05:44.615Z'
+}
+```
+
+### Start the client with the project id
+
+Once the project is created, you can start clients to scrape only the first level recommendations with:
+
+```
+./client server.com some_password 2
+```
+
+Where `2` is the `id` of the project you've just created.
+
+The recommendations will be stored in the `video` table as usual, with `project_id` set to the project you've used.
+You can parallelize the scraping across many machines if the list of URLs is long.
+
+In the `video` table, videos are unique for a given project, i.e. there is a unique index on `project_id` and `url`.
+
