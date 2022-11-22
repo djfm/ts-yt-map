@@ -83,33 +83,31 @@ export const startServer = async (
   type URLResp = { ok: true, url: string } | { ok: false };
 
   const getVideoToCrawl = async (client: Client): Promise<URLResp> => {
-    const resp = await ds.transaction(async (manager: EntityManager): Promise<URLResp> => {
-      const video = await manager.findOne(Video, {
-        where: {
-          crawled: false,
-          crawlAttemptCount: LessThan(4),
-          latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
-          clientId: client.id,
-        },
-        order: { url: 'ASC' },
-      });
+    const repo = ds.manager.getRepository(Video);
 
-      if (video) {
-        video.latestCrawlAttemptedAt = new Date();
-        video.crawlAttemptCount += 1;
-        video.updatedAt = new Date();
-        await manager.save(video);
-        return { ok: true, url: video.url };
-      }
-
-      if (client.seed) {
-        return { ok: true, url: client.seed };
-      }
-
-      return { ok: false };
+    const video = await repo.findOne({
+      where: {
+        crawled: false,
+        crawlAttemptCount: LessThan(4),
+        latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
+        clientId: client.id,
+      },
+      order: { url: 'ASC' },
     });
 
-    return resp;
+    if (video) {
+      video.latestCrawlAttemptedAt = new Date();
+      video.crawlAttemptCount += 1;
+      video.updatedAt = new Date();
+      await repo.save(video);
+      return { ok: true, url: video.url };
+    }
+
+    if (client.seed) {
+      return { ok: true, url: client.seed };
+    }
+
+    return { ok: false };
   };
 
   const getFirstLevelRecommendationsUrlToCrawl = async (projectId: number):
@@ -253,29 +251,31 @@ export const startServer = async (
         return;
       }
 
-      const client = await getOrCreateClient(client_name, ip, seed_video);
+      await withLock('exploration', async () => {
+        const client = await getOrCreateClient(client_name, ip, seed_video);
 
-      const u = await getVideoToCrawl(client);
+        const u = await getVideoToCrawl(client);
 
-      if (u.ok) {
-        if (sentURLsToCrawl.has(u.url)) {
-          log.info(`Already sent ${u.url} to a client`);
-          res.status(500).json({ ok: false, message: 'URL already sent to parse' });
-          return;
+        if (u.ok) {
+          if (sentURLsToCrawl.has(u.url)) {
+            log.info(`Already sent ${u.url} to a client`);
+            res.status(500).json({ ok: false, message: 'URL already sent to parse' });
+            return;
+          }
+
+          sentURLsToCrawl.add(u.url);
+
+          setTimeout(() => {
+            sentURLsToCrawl.delete(u.url);
+          }, 1000 * 60 * 15);
+
+          log.info(`Sent video to crawl ${u.url} to ${ip} (client with id ${client.id})`);
+          res.status(200).json(u);
+        } else {
+          log.info(`No video to crawl for ${ip}`);
+          res.status(503).json(u);
         }
-
-        sentURLsToCrawl.add(u.url);
-
-        setTimeout(() => {
-          sentURLsToCrawl.delete(u.url);
-        }, 1000 * 60 * 15);
-
-        log.info(`Sent video to crawl ${u.url} to ${ip} (client with id ${client.id})`);
-        res.status(200).json(u);
-      } else {
-        log.info(`No video to crawl for ${ip}`);
-        res.status(503).json(u);
-      }
+      });
     } else if (project.type === 'first level recommendations') {
       try {
         await withLock(`first-level-recommendations-${project.id}`, async () => {

@@ -3,7 +3,14 @@ import { stat } from 'fs/promises';
 
 import { LoggerInterface } from './lib';
 
-const locks = new Map<string, Array<() => Promise<void>>>();
+type AsyncFn = () => Promise<void>;
+
+type Lock = {
+  running: Promise<void> | null;
+  queue: AsyncFn[];
+}
+
+const locks = new Map<string, Lock>();
 
 const unstackLock = async (id: string) => {
   const stack = locks.get(id);
@@ -12,33 +19,36 @@ const unstackLock = async (id: string) => {
     return;
   }
 
-  const nextFn = stack.shift();
-
-  if (!nextFn) {
+  if (stack.queue.length === 0) {
     return;
   }
 
-  try {
-    await nextFn();
-  } finally {
-    await unstackLock(id);
+  if (!stack.running) {
+    const fn = stack.queue.shift();
+    if (fn) {
+      stack.running = fn();
+      await stack.running;
+      stack.running = null;
+      await unstackLock(id);
+    }
   }
 };
 
-export const withLock = async (id: string, fn: () => Promise<void>): Promise<void> => {
+export const withLock = async (id: string, fn: AsyncFn): Promise<void> => {
   if (!locks.has(id)) {
-    locks.set(id, []);
+    locks.set(id, { running: null, queue: [] });
   }
 
   const lock = locks.get(id);
 
   if (!lock) {
+    // never happens but makes TS happy
     throw new Error('Lock is not defined');
   }
 
-  lock.push(fn);
+  lock.queue.push(fn);
 
-  await unstackLock(id);
+  return unstackLock(id);
 };
 
 /* eslint-disable import/prefer-default-export */
