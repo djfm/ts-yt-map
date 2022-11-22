@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+server=$1
+password=$2
+concurrency="${3:-4}"
+
+echo "Running script with bash:"
+bash --version
+
+if [ -z "$server" ]; then
+  echo "Usage: $0 <server> <password> [concurrency=4]"
+  exit 1
+fi
+
+if [ -z "$password" ]; then
+  echo "Usage: $0 <server> <password> [concurrency=4]"
+  exit 1
+fi
+
+./client "$server" "$password" 1 "$concurrency"

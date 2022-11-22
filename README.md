@@ -103,7 +103,7 @@ Still assuming you have `docker compose` installed,
 just run:
 
 ```bash
-./client <url> <password> [project_id=1] [concurrency=4]
+./explore <url> <password> [concurrency=4]
 ```
 
 ## Get first-level recommendations from a list of URLs

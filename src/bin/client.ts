@@ -54,7 +54,8 @@ const main = async () => {
       // eslint-disable-next-line no-await-in-loop
       const report = await client.scrapeOneVideoAndItsRecommendations();
 
-      if (report.ok && report.count === 0) {
+      // dirty hack, never break in project 1, which is the random walk and never ends
+      if (report.ok && report.count === 0 && clientSettings.projectId !== 1) {
         break;
       }
     } catch (e) {

@@ -54,7 +54,15 @@ export class API {
     })
       .then((res) => res.data)
       .catch((err) => {
-        this.log.error(err);
+        if (err.response && err.response.data) {
+          this.log.error(err.response.data);
+          if (err.response.data.message) {
+            throw new Error(err.response.data.message);
+          }
+        } else {
+          this.log.error(err);
+        }
+
         throw err;
       });
   }
