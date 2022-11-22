@@ -30,6 +30,10 @@ const unstackLock = async (id: string) => {
       await stack.running;
       stack.running = null;
       await unstackLock(id);
+      const newStack = locks.get(id);
+      if (newStack && newStack.queue.length === 0) {
+        locks.delete(id);
+      }
     }
   }
 };
