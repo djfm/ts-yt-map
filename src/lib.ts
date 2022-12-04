@@ -67,7 +67,7 @@ export class ServerConfig {
   }
 }
 
-const logDir = new Date().toISOString();
+const logDir = new Date().toISOString().replace(':', '.');
 
 export const createLogger = async (): Promise<LoggerInterface> => {
   const logRoot = join(__dirname, '..', 'logs', logDir);
