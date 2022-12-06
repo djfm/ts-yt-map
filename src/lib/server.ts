@@ -5,6 +5,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { validate } from 'class-validator';
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 
 import geoip from 'geoip-lite';
 
@@ -216,6 +217,7 @@ export const startServer = async (
   app.set('views', './views');
 
   app.use(bodyParser.json());
+  app.use(cors());
   app.use(bodyParser.urlencoded({ extended: true }));
 
   app.get(GETPing, (req, res) => {

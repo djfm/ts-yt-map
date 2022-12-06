@@ -3,6 +3,7 @@ services:
   client:
     build: .
     image: djfm/ts-yt-map:latest
+    network_mode: host
 
   server:
     image: djfm/ts-yt-map:latest
