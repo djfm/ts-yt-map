@@ -104,15 +104,17 @@ export const startServer = async (
   const getVideoToCrawl = async (client: Client): Promise<URLResp> => {
     const repo = ds.manager.getRepository(Video);
 
-    const video = await repo.findOne({
-      where: {
+    const video = await repo.createQueryBuilder()
+      .select()
+      .where({
         crawled: false,
         crawling: false,
         crawlAttemptCount: LessThan(4),
         clientId: client.id,
-      },
-      order: { url: 'ASC' },
-    });
+      })
+      .orderBy('RANDOM()')
+      .take(1)
+      .getOne();
 
     if (video) {
       const now = new Date();
