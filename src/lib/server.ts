@@ -201,8 +201,22 @@ export const startServer = async (
       log.error(newChannelErrors);
       throw new Error('Failed to save channel');
     }
-    const savedChannel = await repo.save(newChannel);
-    return savedChannel.id;
+
+    try {
+      const savedChannel = await repo.save(newChannel);
+      return savedChannel.id;
+    } catch (e) {
+      const channel = await repo.findOneBy(Channel, {
+        youtubeId: newChannel.youtubeId,
+      });
+
+      if (channel) {
+        return channel.id;
+      }
+
+      log.error('Failed to find channel after save failed', { error: e });
+      throw e;
+    }
   };
 
   const saveVideo = async (
