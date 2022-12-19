@@ -81,6 +81,24 @@ export const startServer = async (
 
   await ds.initialize();
 
+  // automatically clear the "crawling flag" on videos that are still marked
+  // as "crawling" 15 minutes after the latest crawl attempt
+  const updateCrawlingFlag = async () => {
+    try {
+      await ds.createQueryBuilder()
+        .update(Video)
+        .set({ crawling: false })
+        .where({ crawling: true })
+        .andWhere({ latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 15 * 60 * 1000)) })
+        .execute();
+    } catch (e) {
+      log.error('Failed to update crawling flag', { error: e });
+    }
+  };
+
+  // update the crawling flag every 15 minutes
+  setInterval(updateCrawlingFlag, 15 * 60 * 1000);
+
   type URLResp = { ok: true, url: string } | { ok: false };
 
   const getVideoToCrawl = async (client: Client): Promise<URLResp> => {
@@ -89,17 +107,21 @@ export const startServer = async (
     const video = await repo.findOne({
       where: {
         crawled: false,
+        crawling: false,
         crawlAttemptCount: LessThan(4),
-        latestCrawlAttemptedAt: LessThan(new Date(Date.now() - 1000 * 60 * 10)),
         clientId: client.id,
       },
       order: { url: 'ASC' },
     });
 
     if (video) {
-      video.latestCrawlAttemptedAt = new Date();
+      const now = new Date();
+      video.latestCrawlAttemptedAt = now;
+      video.updatedAt = now;
+      video.latestCrawlAttemptedAt = now;
       video.crawlAttemptCount += 1;
-      video.updatedAt = new Date();
+      video.crawling = true;
+
       await repo.save(video);
       return { ok: true, url: video.url };
     }
@@ -367,6 +389,7 @@ export const startServer = async (
         const from = await saveVideo(em, data.from, data.projectId);
 
         from.crawled = true;
+        from.crawling = false;
 
         const saves = Object.entries(data.to)
           .map(async ([rank, video]): Promise<Recommendation> => {

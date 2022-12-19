@@ -51,6 +51,9 @@ export class Video extends ScrapedVideoData {
   public crawled: boolean = false;
 
   @Column()
+  public crawling: boolean = false;
+
+  @Column()
   public latestCrawlAttemptedAt: Date = new Date(0);
 
   @Column()
