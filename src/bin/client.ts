@@ -48,6 +48,11 @@ const main = async () => {
     clientSettings.projectId
   }...`);
 
+  const maxStartDelay = 10000;
+  const startDelay = Math.floor(Math.random() * maxStartDelay);
+  log.info(`Waiting ${startDelay}ms before starting...`);
+  await sleep(startDelay);
+
   for (;;) {
     try {
       log.info('Scraping one video and its recommendations...');
