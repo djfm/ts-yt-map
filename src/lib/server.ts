@@ -101,7 +101,7 @@ export const startServer = async (
 
   type URLResp = { ok: true, url: string } | { ok: false };
 
-  const getVideoToCrawl = async (client: Client): Promise<URLResp> => {
+  const getVideoToCrawl = async (client: Client, projectId: number): Promise<URLResp> => {
     const repo = ds.manager.getRepository(Video);
 
     const video = await repo.createQueryBuilder()
@@ -110,7 +110,7 @@ export const startServer = async (
         crawled: false,
         crawling: false,
         crawlAttemptCount: LessThan(4),
-        clientId: client.id,
+        projectId,
       })
       .orderBy('RANDOM()')
       .take(1)
@@ -245,8 +245,13 @@ export const startServer = async (
       return saved;
     }
 
-    const newVideo = await em.save(videoEntity);
-    return newVideo;
+    try {
+      const newVideo = await em.save(videoEntity);
+      return newVideo;
+    } catch (e) {
+      log.error('Failed to save video', { error: e });
+      throw e;
+    }
   };
 
   const app = express();
@@ -294,7 +299,7 @@ export const startServer = async (
       await withLock('exploration', async () => {
         const client = await getOrCreateClient(client_name, ip, seed_video);
 
-        const u = await getVideoToCrawl(client);
+        const u = await getVideoToCrawl(client, project.id);
 
         if (u.ok) {
           if (sentURLsToCrawl.has(u.url)) {
