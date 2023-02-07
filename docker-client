@@ -17,6 +17,8 @@ export SERVER_PASSWORD="$password"
 export PROJECT_ID="$projectId"
 export CONCURRENCY="$concurrency"
 
-yarn pm2 start client.config.js
+#yarn pm2 start client.config.js
 
-yarn pm2 logs
+#yarn pm2 logs
+
+node dist/bin/client.js
