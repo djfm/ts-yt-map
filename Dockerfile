@@ -22,6 +22,7 @@ RUN lsb_release -a
 COPY . /root/yt_rec_graph
 WORKDIR /root/yt_rec_graph
 RUN yarn
+RUN yarn tsc
 EXPOSE 38472/tcp
 EXPOSE 38478/tcp
 EXPOSE 38479/tcp
