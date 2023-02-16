@@ -37,6 +37,7 @@ export class Browser {
     };
 
     const puppeteerBrowser = await puppeteer.launch({
+      executablePath: "/usr/bin/chromium",
       headless: cfg.headless ?? false,
       defaultViewport,
       args,

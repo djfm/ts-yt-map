@@ -18,4 +18,4 @@ if [ -z "$password" ]; then
   exit 1
 fi
 
-docker compose run -e NODE_ENV=production-docker --rm client bash docker-client "$server" "$password" "$projectId" "$concurrency"
+docker-compose run -e NODE_ENV=production-docker --rm client bash docker-client "$server" "$password" "$projectId" "$concurrency"
