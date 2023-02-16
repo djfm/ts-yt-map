@@ -1,4 +1,4 @@
-FROM node:latest
+FROM arm64v8/node:latest
 
 RUN apt update
 RUN apt upgrade -y
