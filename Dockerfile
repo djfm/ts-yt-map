@@ -1,4 +1,4 @@
-FROM arm32v7/node:latest
+FROM arm64/node:latest
 
 RUN apt update
 RUN apt upgrade -y
